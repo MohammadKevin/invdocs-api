@@ -1,0 +1,109 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  super_admin
+  admin_rack
+  user
+}
+
+enum StatusRack {
+  pending
+  active
+  inactive
+}
+
+enum DocumentStatus {
+  pending
+  approved
+  rejected
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role     @default(user)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  racks         Rack[]
+  documents     Document[] @relation("UserDocuments")
+  verifiedDocs  Document[] @relation("VerifiedBy")
+
+  @@index([email])
+}
+
+model Rack {
+  id        String     @id @default(uuid())
+  name      String
+  status    StatusRack @default(pending)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  boxes Box[]
+
+  @@index([userId])
+}
+
+model Box {
+  id          String   @id @default(uuid())
+  name        String
+  description String   @db.VarChar(150)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  rackId String
+  rack   Rack @relation(fields: [rackId], references: [id], onDelete: Cascade)
+
+  documents Document[]
+
+  @@index([rackId])
+}
+
+model Document {
+  id          String   @id @default(uuid())
+  title       String
+  description String   @db.VarChar(150)
+
+  fileUrl     String
+  fileType    String
+  fileSize    Int
+
+  status      DocumentStatus @default(pending)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  uploadedBy String
+  user       User @relation("UserDocuments", fields: [uploadedBy], references: [id], onDelete: Cascade)
+
+  verifiedBy String?
+  admin      User? @relation("VerifiedBy", fields: [verifiedBy], references: [id])
+
+  boxId String
+  box   Box @relation(fields: [boxId], references: [id], onDelete: Cascade)
+
+  @@index([uploadedBy])
+  @@index([boxId])
+  @@index([status])
+}
