@@ -13,41 +13,58 @@ async function bootstrap() {
 
   const configService = app.get(ConfigService);
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+  // 🔐 Security
   app.use(helmet());
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+
+  // 📜 Logging
   app.use(morgan('dev'));
 
+  // 🌐 CORS
   app.enableCors({
-    origin: true,
+    origin: true, // nanti production bisa diganti domain spesifik
     credentials: true,
   });
 
+  // ✅ Validation global
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
       forbidNonWhitelisted: true,
       transform: true,
+      transformOptions: {
+        enableImplicitConversion: true,
+      },
     }),
   );
 
+  // 🔗 Global prefix
   app.setGlobalPrefix('api');
 
+  // 📘 Swagger config
   const swaggerConfig = new DocumentBuilder()
-    .setTitle('inventory API')
+    .setTitle('Inventory API')
     .setDescription('API Dokumentasi untuk inventory management system')
     .setVersion('1.0')
-    .addBearerAuth()
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        in: 'header',
+      },
+      'access-token', // 👈 ini penting untuk @ApiBearerAuth()
+    )
     .build();
 
   const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('docs', app, document);
 
   const port = configService.get<number>('PORT') || 3000;
+
   await app.listen(port);
 
-  console.log(`server running on http://localhost:${port}/api`);
-  console.log(`Swagger docs on http://localhost:${port}/docs`);
+  console.log(`🚀 Server running on http://localhost:${port}/api`);
+  console.log(`📘 Swagger docs on http://localhost:${port}/docs`);
 }
 
 bootstrap();
