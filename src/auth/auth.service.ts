@@ -6,18 +6,22 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
+import { User } from '@prisma/client';
+
+import { RegisterDto } from './dto/register.dto';
+import { LoginDto } from './dto/login.dto';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private prisma: PrismaService,
-    private jwtService: JwtService,
+    private readonly prisma: PrismaService,
+    private readonly jwtService: JwtService,
   ) {}
 
   // ✅ REGISTER
-  async register(data: { name: string; email: string; password: string }) {
+  async register(data: RegisterDto) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-    const existingUser = await this.prisma.user.findUnique({
+    const existingUser: User | null = await this.prisma.user.findUnique({
       where: { email: data.email },
     });
 
@@ -26,14 +30,13 @@ export class AuthService {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-    const hashedPassword = await bcrypt.hash(data.password, 10);
+    const hashedPassword: string = await bcrypt.hash(data.password, 10);
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-    const user = await this.prisma.user.create({
+    const user: User = await this.prisma.user.create({
       data: {
         name: data.name,
         email: data.email,
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         password: hashedPassword,
       },
     });
@@ -41,20 +44,17 @@ export class AuthService {
     return {
       message: 'Register success',
       data: {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
         id: user.id,
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
         email: user.email,
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
         name: user.name,
       },
     };
   }
 
   // ✅ LOGIN
-  async login(data: { email: string; password: string }) {
+  async login(data: LoginDto) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-    const user = await this.prisma.user.findUnique({
+    const user: User | null = await this.prisma.user.findUnique({
       where: { email: data.email },
     });
 
@@ -63,22 +63,19 @@ export class AuthService {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-    const isMatch = await bcrypt.compare(data.password, user.password);
+    const isMatch: boolean = await bcrypt.compare(data.password, user.password);
 
     if (!isMatch) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
     const payload = {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
       sub: user.id,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
       email: user.email,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
       role: user.role,
     };
 
-    const access_token = await this.jwtService.signAsync(payload);
+    const access_token: string = await this.jwtService.signAsync(payload);
 
     return {
       message: 'Login success',
