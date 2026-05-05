@@ -50,7 +50,7 @@ model User {
 
 model Rack {
   id        String     @id @default(uuid())
-  name      String
+  name_rack      String
   status    StatusRack @default(pending)
 
   createdAt DateTime @default(now())
@@ -66,7 +66,7 @@ model Rack {
 
 model Box {
   id          String   @id @default(uuid())
-  name        String
+  name_box       String
   description String   @db.VarChar(150)
 
   createdAt DateTime @default(now())

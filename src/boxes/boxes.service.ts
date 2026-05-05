@@ -1,146 +1,156 @@
 import {
-  BadRequestException,
   Injectable,
   NotFoundException,
+  ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { Box } from '@prisma/client';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { Box, Role, StatusRack } from '@prisma/client';
 
-interface UserPayload {
-  id: string;
+import { CreateBoxDto } from './dto/create-boxes.dto';
+import { UpdateBoxDto } from './dto/update-service.dto';
+
+interface JwtUser {
+  sub: string;
   email: string;
-  role: string;
+  role: Role;
 }
 
 @Injectable()
 export class BoxesService {
   constructor(private readonly prisma: PrismaService) {}
 
-  // 📦 CREATE BOX
-  async create(
-    data: { name: string; description: string; rackId: string },
-    user: UserPayload,
-  ): Promise<Box> {
-    // 🔍 cek rack
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+  async create(dto: CreateBoxDto, user: JwtUser): Promise<Box> {
     const rack = await this.prisma.rack.findUnique({
-      where: { id: data.rackId },
+      where: { id: dto.rackId },
     });
 
     if (!rack) {
-      throw new NotFoundException('Rack not found');
+      throw new NotFoundException('Rack tidak ditemukan');
     }
 
-    // 🔐 hanya admin pemilik rack
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    if (user.role === 'admin_rack' && rack.userId !== user.id) {
-      throw new BadRequestException('You can only use your own rack');
+    // 🔒 hanya admin_rack
+    if (user.role !== Role.admin_rack) {
+      throw new ForbiddenException('Hanya admin rack yang bisa membuat box');
+    }
+
+    // 🔐 harus rack milik sendiri
+    if (rack.userId !== user.sub) {
+      throw new ForbiddenException(
+        'Anda hanya bisa menggunakan rack milik sendiri',
+      );
     }
 
     // ❗ rack harus active
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    if (rack.status !== 'active') {
-      throw new BadRequestException('Rack is not active');
+    if (rack.status !== StatusRack.active) {
+      throw new BadRequestException('Rack belum aktif');
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     return this.prisma.box.create({
       data: {
-        name: data.name,
-        description: data.description,
-        rackId: data.rackId,
+        name_box: dto.name_box,
+        description: dto.description,
+        rackId: dto.rackId,
       },
     });
   }
 
-  // 📦 GET ALL BOXES (super admin)
-  findAll() {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+  async findAll(user: JwtUser) {
+    if (user.role !== Role.super_admin) {
+      throw new ForbiddenException(
+        'Hanya super admin yang bisa melihat semua box',
+      );
+    }
+
     return this.prisma.box.findMany({
       include: {
         rack: {
           include: {
-            user: true,
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
           },
         },
       },
     });
   }
 
-  // 📦 GET BOX BY RACK
-  async findByRack(rackId: string, user: UserPayload) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+  async findByRack(rackId: string, user: JwtUser) {
     const rack = await this.prisma.rack.findUnique({
       where: { id: rackId },
     });
 
     if (!rack) {
-      throw new NotFoundException('Rack not found');
+      throw new NotFoundException('Rack tidak ditemukan');
     }
 
-    // 🔐 admin hanya bisa lihat rack sendiri
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    if (user.role === 'admin_rack' && rack.userId !== user.id) {
-      throw new BadRequestException('Access denied');
+    if (user.role === Role.admin_rack && rack.userId !== user.sub) {
+      throw new ForbiddenException('Akses ditolak');
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     return this.prisma.box.findMany({
       where: { rackId },
     });
   }
 
-  // 📦 UPDATE BOX
-  async update(
-    id: string,
-    data: { name?: string; description?: string },
-    user: UserPayload,
-  ): Promise<Box> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+  async findOne(id: string, user: JwtUser): Promise<Box> {
     const box = await this.prisma.box.findUnique({
       where: { id },
       include: { rack: true },
     });
 
     if (!box) {
-      throw new NotFoundException('Box not found');
+      throw new NotFoundException('Box tidak ditemukan');
     }
 
-    // 🔐 admin hanya boleh edit miliknya
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    if (user.role === 'admin_rack' && box.rack.userId !== user.id) {
-      throw new BadRequestException('Access denied');
+    if (user.role === Role.admin_rack && box.rack.userId !== user.sub) {
+      throw new ForbiddenException('Akses ditolak');
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    return box;
+  }
+
+  async update(id: string, dto: UpdateBoxDto, user: JwtUser): Promise<Box> {
+    const box = await this.prisma.box.findUnique({
+      where: { id },
+      include: { rack: true },
+    });
+
+    if (!box) {
+      throw new NotFoundException('Box tidak ditemukan');
+    }
+
+    if (user.role === Role.admin_rack && box.rack.userId !== user.sub) {
+      throw new ForbiddenException('Akses ditolak');
+    }
+
     return this.prisma.box.update({
       where: { id },
       data: {
-        ...(data.name && { name: data.name }),
-        ...(data.description && { description: data.description }),
+        ...(dto.name_box && { name_box: dto.name_box }),
+        ...(dto.description && { description: dto.description }),
       },
     });
   }
 
-  // 📦 DELETE BOX
-  async remove(id: string, user: UserPayload): Promise<Box> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+  async remove(id: string, user: JwtUser): Promise<Box> {
     const box = await this.prisma.box.findUnique({
       where: { id },
       include: { rack: true },
     });
 
     if (!box) {
-      throw new NotFoundException('Box not found');
+      throw new NotFoundException('Box tidak ditemukan');
     }
 
-    // 🔐 admin hanya boleh hapus miliknya
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    if (user.role === 'admin_rack' && box.rack.userId !== user.id) {
-      throw new BadRequestException('Access denied');
+    if (user.role === Role.admin_rack && box.rack.userId !== user.sub) {
+      throw new ForbiddenException('Akses ditolak');
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     return this.prisma.box.delete({
       where: { id },
     });

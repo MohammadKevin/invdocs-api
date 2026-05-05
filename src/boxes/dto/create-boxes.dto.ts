@@ -1,17 +1,16 @@
-import { IsNotEmpty, IsString, MaxLength, IsUUID } from 'class-validator';
+import { IsString, MaxLength, MinLength, IsUUID } from 'class-validator';
 
 export class CreateBoxDto {
-  @IsNotEmpty()
   @IsString()
+  @MinLength(3)
   @MaxLength(100)
-  name: string;
+  name_box!: string;
 
-  @IsNotEmpty()
   @IsString()
+  @MinLength(10)
   @MaxLength(150)
-  description: string;
+  description!: string;
 
-  @IsNotEmpty()
   @IsUUID()
-  rackId: string;
+  rackId!: string;
 }

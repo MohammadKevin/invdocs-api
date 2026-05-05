@@ -4,6 +4,7 @@ import { RackController } from './rack.controller';
 
 @Module({
   providers: [RackService],
-  controllers: [RackController]
+  controllers: [RackController],
+  exports: [RackService],
 })
 export class RackModule {}

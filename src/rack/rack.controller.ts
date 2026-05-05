@@ -1,88 +1,83 @@
 import {
   Controller,
   Get,
-  Post,
-  Body,
-  Param,
   Patch,
+  Param,
+  Req,
+  Body,
   UseGuards,
-  ParseUUIDPipe,
 } from '@nestjs/common';
-
 import { RackService } from './rack.service';
-
-import { JwtAuthGuard } from '../auth/guard/jwt-auth.guard';
-import { RolesGuard } from '../auth/guard/roles.guard';
-import { Roles } from '../auth/Decorators/roles.decorator';
-import { CurrentUser } from '../auth/Decorators/current-user.decorator';
-
-import { CreateRackDto } from './dto/create-rack.dto';
 import { UpdateRackDto } from './dto/update-rack.dto';
 
-// 🔐 type user dari JWT
-interface UserPayload {
-  id: string;
-  email: string;
-  role: string;
-}
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiParam,
+  ApiBody,
+} from '@nestjs/swagger';
 
-@Controller('racks')
-@UseGuards(JwtAuthGuard, RolesGuard)
+import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/guard/roles.guard';
+import { Roles } from 'src/auth/Decorators/roles.decorator';
+
+import { Role } from '@prisma/client';
+
+@ApiTags('Rack')
+@ApiBearerAuth()
+@Controller('rack')
 export class RackController {
   constructor(private readonly rackService: RackService) {}
 
-  // ✅ CREATE → hanya admin_rack
-  @Post()
-  @Roles('admin_rack')
-  create(@Body() body: CreateRackDto, @CurrentUser() user: UserPayload) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return this.rackService.create(body, user);
+  @Get('pending')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.super_admin)
+  @ApiOperation({ summary: 'List rack pending (super admin)' })
+  findPending() {
+    return this.rackService.findPending();
   }
 
-  // ✅ SUPER ADMIN lihat semua rack
-  @Get()
-  @Roles('super_admin')
-  findAll() {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return this.rackService.findAll();
-  }
-
-  // ✅ ADMIN lihat rack miliknya
-  @Get('me')
-  @Roles('admin_rack')
-  findMyRacks(@CurrentUser() user: UserPayload) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return this.rackService.findByUser(user.id);
-  }
-
-  // ✅ UPDATE RACK (🔥 ditambahkan)
-  @Patch(':id')
-  @Roles('admin_rack', 'super_admin')
-  update(
-    @Param('id', new ParseUUIDPipe()) id: string,
-    @Body() body: UpdateRackDto,
-    @CurrentUser() user: UserPayload, // ❌ jangan pakai any
-  ) {
-    return this.rackService.update(id, body, user);
-  }
-
-  // ✅ APPROVE RACK
   @Patch(':id/approve')
-  @Roles('super_admin')
-  approve(
-    @Param('id', new ParseUUIDPipe()) id: string,
-    @CurrentUser() user: UserPayload,
-  ) {
-    return this.rackService.approve(id, user.id);
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.super_admin)
+  @ApiOperation({ summary: 'Approve rack' })
+  @ApiParam({
+    name: 'id',
+    example: 'c0a8012e-7f3c-4d9a-9b3f-123456789abc',
+  })
+  approve(@Param('id') id: string) {
+    return this.rackService.approve(id);
   }
 
-  // ✅ REJECT RACK
   @Patch(':id/reject')
-  @Roles('super_admin')
-  reject(
-    @Param('id', new ParseUUIDPipe()) id: string,
-    @CurrentUser() user: UserPayload,
-  ) {
-    return this.rackService.reject(id, user.id);
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.super_admin)
+  @ApiOperation({ summary: 'Reject rack' })
+  @ApiParam({
+    name: 'id',
+    example: 'c0a8012e-7f3c-4d9a-9b3f-123456789abc',
+  })
+  reject(@Param('id') id: string) {
+    return this.rackService.reject(id);
+  }
+
+  @Get('profile')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.admin_rack)
+  @ApiOperation({ summary: 'Get profile rack (admin rack)' })
+  getProfile(@Req() req: any) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
+    return this.rackService.getProfile(req.user.sub);
+  }
+
+  @Patch('profile')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.admin_rack)
+  @ApiOperation({ summary: 'Update profile rack (admin rack)' })
+  @ApiBody({ type: UpdateRackDto })
+  updateProfile(@Req() req: any, @Body() dto: UpdateRackDto) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
+    return this.rackService.updateProfile(req.user.sub, dto);
   }
 }
