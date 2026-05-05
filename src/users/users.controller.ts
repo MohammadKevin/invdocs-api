@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Param } from '@nestjs/common';
 import { UsersService } from './users.service';
 
 @Controller('users')
@@ -9,5 +9,10 @@ export class UsersController {
   findAll() {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return this.usersService.findAll();
+  }
+  @Get(':id')
+  findById(@Param('id') id: string) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    return this.usersService.findById(id);
   }
 }

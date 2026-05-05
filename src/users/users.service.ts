@@ -20,6 +20,11 @@ export class UsersService {
         id: true,
         name: true,
         role: true,
+        racks: {
+          select: {
+            name_rack: true,
+          },
+        },
       },
     });
   }
@@ -31,6 +36,11 @@ export class UsersService {
         id: true,
         name: true,
         role: true,
+        racks: {
+          select: {
+            name_rack: true,
+          },
+        },
       },
     });
   }
