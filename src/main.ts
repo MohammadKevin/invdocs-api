@@ -17,6 +17,7 @@ async function bootstrap() {
   app.use(helmet());
 
   // 📜 Logging
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   app.use(morgan('dev'));
 
   // 🌐 CORS
