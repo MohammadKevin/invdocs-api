@@ -11,7 +11,7 @@ import { CreateBoxDto } from './dto/create-boxes.dto';
 import { UpdateBoxDto } from './dto/update-service.dto';
 
 interface JwtUser {
-  sub: string;
+  id: string;
   email: string;
   role: Role;
 }
@@ -33,7 +33,7 @@ export class BoxesService {
       throw new ForbiddenException('Hanya admin rack yang bisa membuat box');
     }
 
-    if (rack.userId !== user.sub) {
+    if (rack.userId !== user.id) {
       throw new ForbiddenException(
         'Anda hanya bisa menggunakan rack milik sendiri',
       );
@@ -64,7 +64,7 @@ export class BoxesService {
   }
 
   async findAll(user: JwtUser) {
-    if (user.role !== Role.super_admin) {
+    if (user.role !== Role.super_admin && user.role !== Role.admin_rack) {
       throw new ForbiddenException(
         'Hanya super admin yang bisa melihat semua box',
       );
@@ -96,7 +96,7 @@ export class BoxesService {
       throw new NotFoundException('Rack tidak ditemukan');
     }
 
-    if (user.role === Role.admin_rack && rack.userId !== user.sub) {
+    if (user.role === Role.admin_rack && rack.userId !== user.id) {
       throw new ForbiddenException('Akses ditolak');
     }
 
@@ -115,7 +115,7 @@ export class BoxesService {
       throw new NotFoundException('Box tidak ditemukan');
     }
 
-    if (user.role === Role.admin_rack && box.rack.userId !== user.sub) {
+    if (user.role === Role.admin_rack && box.rack.userId !== user.id) {
       throw new ForbiddenException('Akses ditolak');
     }
 
@@ -132,7 +132,7 @@ export class BoxesService {
       throw new NotFoundException('Box tidak ditemukan');
     }
 
-    if (user.role === Role.admin_rack && box.rack.userId !== user.sub) {
+    if (user.role === Role.admin_rack && box.rack.userId !== user.id) {
       throw new ForbiddenException('Akses ditolak');
     }
 
@@ -155,7 +155,7 @@ export class BoxesService {
       throw new NotFoundException('Box tidak ditemukan');
     }
 
-    if (user.role === Role.admin_rack && box.rack.userId !== user.sub) {
+    if (user.role === Role.admin_rack && box.rack.userId !== user.id) {
       throw new ForbiddenException('Akses ditolak');
     }
 

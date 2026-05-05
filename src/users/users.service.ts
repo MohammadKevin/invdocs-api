@@ -22,6 +22,7 @@ export class UsersService {
         role: true,
         racks: {
           select: {
+            id: true,
             name_rack: true,
           },
         },
