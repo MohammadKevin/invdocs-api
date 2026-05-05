@@ -1,13 +1,15 @@
-import { IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 
 export class UpdateBoxDto {
   @IsOptional()
   @IsString()
+  @MinLength(3)
   @MaxLength(100)
-  name?: string;
+  name_box?: string;
 
   @IsOptional()
   @IsString()
+  @MinLength(10)
   @MaxLength(150)
   description?: string;
 }

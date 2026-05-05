@@ -1,85 +1,150 @@
 import {
   Injectable,
-  BadRequestException,
   UnauthorizedException,
+  BadRequestException,
 } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import * as bcrypt from 'bcrypt';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
-import { User } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
+import { User, Role, StatusRack } from '@prisma/client';
 
-import { RegisterDto } from './dto/register.dto';
+import { RegisterUserDto } from './dto/register-user.dto';
+import { RegisterAdminDto } from './dto/register-admin.dto';
 import { LoginDto } from './dto/login.dto';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly prisma: PrismaService,
-    private readonly jwtService: JwtService,
+    private prisma: PrismaService,
+    private jwtService: JwtService,
   ) {}
 
-  // ✅ REGISTER
-  async register(data: RegisterDto) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-    const existingUser: User | null = await this.prisma.user.findUnique({
-      where: { email: data.email },
+  async registerUser(dto: RegisterUserDto) {
+    const exist = await this.prisma.user.findUnique({
+      where: { email: dto.email },
     });
 
-    if (existingUser) {
-      throw new BadRequestException('Email already used');
+    if (exist) {
+      throw new BadRequestException('Email sudah digunakan');
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-    const hashedPassword: string = await bcrypt.hash(data.password, 10);
+    const hashedPassword = await bcrypt.hash(dto.password, 10);
+
+    const user = await this.prisma.user.create({
+      data: {
+        name: dto.name,
+        email: dto.email,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        password: hashedPassword,
+        role: Role.user,
+      },
+    });
+
+    return this.generateToken(user);
+  }
+
+  async registerAdmin(dto: RegisterAdminDto) {
+    const exist = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+    });
+
+    if (exist) {
+      throw new BadRequestException('Email sudah digunakan');
+    }
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-    const user: User = await this.prisma.user.create({
+    const hashedPassword = await bcrypt.hash(dto.password, 10);
+
+    await this.prisma.user.create({
       data: {
-        name: data.name,
-        email: data.email,
+        name: dto.name,
+        email: dto.email,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         password: hashedPassword,
+        role: Role.admin_rack,
+        racks: {
+          create: {
+            name_rack: dto.name_rack,
+            status: StatusRack.pending,
+          },
+        },
       },
     });
 
     return {
-      message: 'Register success',
-      data: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-      },
+      message: 'Pendaftaran berhasil, tunggu persetujuan super admin',
     };
   }
 
-  // ✅ LOGIN
-  async login(data: LoginDto) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-    const user: User | null = await this.prisma.user.findUnique({
-      where: { email: data.email },
+  async validateUser(email: string, password: string): Promise<User> {
+    const user = await this.prisma.user.findUnique({
+      where: { email: email.trim() },
+      include: { racks: true },
     });
 
     if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException('User tidak ditemukan');
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-    const isMatch: boolean = await bcrypt.compare(data.password, user.password);
+    const isMatch = await bcrypt.compare(password.trim(), user.password);
 
     if (!isMatch) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException('Password salah');
     }
 
-    const payload = {
-      sub: user.id,
-      email: user.email,
-      role: user.role,
-    };
+    if (user.role === Role.admin_rack) {
+      const hasActiveRack = user.racks.some(
+        (rack) => rack.status === StatusRack.active,
+      );
 
-    const access_token: string = await this.jwtService.signAsync(payload);
+      if (!hasActiveRack) {
+        throw new UnauthorizedException(
+          'Rack belum disetujui oleh super admin',
+        );
+      }
+    }
 
+    return user;
+  }
+
+  async login(dto: LoginDto) {
+    const user = await this.validateUser(dto.email, dto.password);
+    return this.generateToken(user);
+  }
+
+  private generateToken(user: User) {
     return {
-      message: 'Login success',
-      access_token,
+      message: 'Berhasil',
+      access_token: this.jwtService.sign({
+        sub: user.id,
+        email: user.email,
+        role: user.role,
+      }),
     };
+  }
+
+  async initSuperAdmin() {
+    const exist = await this.prisma.user.findFirst({
+      where: { role: Role.super_admin },
+    });
+
+    if (!exist) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+      const hashed = await bcrypt.hash(process.env.SUPERADMIN_PASSWORD!, 10);
+
+      await this.prisma.user.create({
+        data: {
+          name: process.env.SUPERADMIN_NAME!,
+          email: process.env.SUPERADMIN_EMAIL!,
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          password: hashed,
+          role: Role.super_admin,
+        },
+      });
+
+      console.log('Super admin berhasil dibuat');
+    }
   }
 }

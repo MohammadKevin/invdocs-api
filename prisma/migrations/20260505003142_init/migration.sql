@@ -16,7 +16,7 @@ CREATE TABLE `User` (
 -- CreateTable
 CREATE TABLE `Rack` (
     `id` VARCHAR(191) NOT NULL,
-    `name` VARCHAR(191) NOT NULL,
+    `name_rack` VARCHAR(191) NOT NULL,
     `status` ENUM('pending', 'active', 'inactive') NOT NULL DEFAULT 'pending',
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
@@ -29,7 +29,7 @@ CREATE TABLE `Rack` (
 -- CreateTable
 CREATE TABLE `Box` (
     `id` VARCHAR(191) NOT NULL,
-    `name` VARCHAR(191) NOT NULL,
+    `name_box` VARCHAR(191) NOT NULL,
     `description` VARCHAR(150) NOT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
