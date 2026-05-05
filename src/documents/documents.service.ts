@@ -38,7 +38,7 @@ export class DocumentsService {
       throw new NotFoundException('Box tidak ditemukan');
     }
 
-    const fileUrl = `/uploads/${file.filename}`;
+    const fileUrl = `/uploads/documents/${file.filename}`;
 
     return this.prisma.document.create({
       data: {

@@ -7,15 +7,14 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-import { AuthService } from './auth/auth.service';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   const configService = app.get(ConfigService);
-  const authService = app.get(AuthService);
 
   app.use(helmet());
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   app.use(morgan('dev'));
 
   app.enableCors({
@@ -53,8 +52,6 @@ async function bootstrap() {
 
   const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('docs', app, document);
-
-  await authService.initSuperAdmin();
 
   const port = configService.get<number>('PORT') || 3000;
 

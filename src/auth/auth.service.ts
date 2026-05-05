@@ -124,27 +124,4 @@ export class AuthService {
       }),
     };
   }
-
-  async initSuperAdmin() {
-    const exist = await this.prisma.user.findFirst({
-      where: { role: Role.super_admin },
-    });
-
-    if (!exist) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-      const hashed = await bcrypt.hash(process.env.SUPERADMIN_PASSWORD!, 10);
-
-      await this.prisma.user.create({
-        data: {
-          name: process.env.SUPERADMIN_NAME!,
-          email: process.env.SUPERADMIN_EMAIL!,
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-          password: hashed,
-          role: Role.super_admin,
-        },
-      });
-
-      console.log('Super admin berhasil dibuat');
-    }
-  }
 }

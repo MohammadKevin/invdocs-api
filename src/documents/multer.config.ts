@@ -4,7 +4,7 @@ import { BadRequestException } from '@nestjs/common';
 
 export const multerConfig = {
   storage: diskStorage({
-    destination: './uploads',
+    destination: './uploads/documents',
     filename: (req, file, callback) => {
       const uniqueName = Date.now() + '-' + Math.round(Math.random() * 1e9);
       callback(null, uniqueName + extname(file.originalname));
