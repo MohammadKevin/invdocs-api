@@ -7,26 +7,22 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { AuthService } from './auth/auth.service';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   const configService = app.get(ConfigService);
+  const authService = app.get(AuthService);
 
-  // 🔐 Security
   app.use(helmet());
-
-  // 📜 Logging
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   app.use(morgan('dev'));
 
-  // 🌐 CORS
   app.enableCors({
-    origin: true, // nanti production bisa diganti domain spesifik
+    origin: true,
     credentials: true,
   });
 
-  // ✅ Validation global
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -38,10 +34,8 @@ async function bootstrap() {
     }),
   );
 
-  // 🔗 Global prefix
   app.setGlobalPrefix('api');
 
-  // 📘 Swagger config
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Inventory API')
     .setDescription('API Dokumentasi untuk inventory management system')
@@ -53,19 +47,21 @@ async function bootstrap() {
         bearerFormat: 'JWT',
         in: 'header',
       },
-      'access-token', // 👈 ini penting untuk @ApiBearerAuth()
+      'access-token',
     )
     .build();
 
   const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('docs', app, document);
 
+  await authService.initSuperAdmin();
+
   const port = configService.get<number>('PORT') || 3000;
 
   await app.listen(port);
 
-  console.log(`🚀 Server running on http://localhost:${port}/api`);
-  console.log(`📘 Swagger docs on http://localhost:${port}/docs`);
+  console.log(`🚀 http://localhost:${port}/api`);
+  console.log(`📘 http://localhost:${port}/docs`);
 }
 
 bootstrap();

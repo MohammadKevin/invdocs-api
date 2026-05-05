@@ -6,17 +6,12 @@ import {
   Req,
   Body,
   UseGuards,
+  Delete,
 } from '@nestjs/common';
 import { RackService } from './rack.service';
 import { UpdateRackDto } from './dto/update-rack.dto';
 
-import {
-  ApiTags,
-  ApiOperation,
-  ApiBearerAuth,
-  ApiParam,
-  ApiBody,
-} from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 
 import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/guard/roles.guard';
@@ -27,57 +22,52 @@ import { Role } from '@prisma/client';
 @ApiTags('Rack')
 @ApiBearerAuth()
 @Controller('rack')
+@UseGuards(JwtAuthGuard)
 export class RackController {
   constructor(private readonly rackService: RackService) {}
 
   @Get('pending')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(RolesGuard)
   @Roles(Role.super_admin)
-  @ApiOperation({ summary: 'List rack pending (super admin)' })
   findPending() {
     return this.rackService.findPending();
   }
 
   @Patch(':id/approve')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(RolesGuard)
   @Roles(Role.super_admin)
-  @ApiOperation({ summary: 'Approve rack' })
-  @ApiParam({
-    name: 'id',
-    example: 'c0a8012e-7f3c-4d9a-9b3f-123456789abc',
-  })
   approve(@Param('id') id: string) {
     return this.rackService.approve(id);
   }
 
   @Patch(':id/reject')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(RolesGuard)
   @Roles(Role.super_admin)
-  @ApiOperation({ summary: 'Reject rack' })
-  @ApiParam({
-    name: 'id',
-    example: 'c0a8012e-7f3c-4d9a-9b3f-123456789abc',
-  })
   reject(@Param('id') id: string) {
     return this.rackService.reject(id);
   }
 
-  @Get('profile')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Get('my')
+  @UseGuards(RolesGuard)
   @Roles(Role.admin_rack)
-  @ApiOperation({ summary: 'Get profile rack (admin rack)' })
-  getProfile(@Req() req: any) {
+  findMyRacks(@Req() req: any) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
-    return this.rackService.getProfile(req.user.sub);
+    return this.rackService.findMyRacks(req.user.id);
   }
 
-  @Patch('profile')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Patch(':id')
+  @UseGuards(RolesGuard)
   @Roles(Role.admin_rack)
-  @ApiOperation({ summary: 'Update profile rack (admin rack)' })
-  @ApiBody({ type: UpdateRackDto })
-  updateProfile(@Req() req: any, @Body() dto: UpdateRackDto) {
+  update(@Param('id') id: string, @Req() req: any, @Body() dto: UpdateRackDto) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
-    return this.rackService.updateProfile(req.user.sub, dto);
+    return this.rackService.updateRack(id, req.user.id, dto);
+  }
+
+  @Delete(':id')
+  @UseGuards(RolesGuard)
+  @Roles(Role.admin_rack)
+  delete(@Param('id') id: string, @Req() req: any) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
+    return this.rackService.deleteRack(id, req.user.id);
   }
 }

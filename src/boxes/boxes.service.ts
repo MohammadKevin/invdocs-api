@@ -29,25 +29,33 @@ export class BoxesService {
       throw new NotFoundException('Rack tidak ditemukan');
     }
 
-    // 🔒 hanya admin_rack
     if (user.role !== Role.admin_rack) {
       throw new ForbiddenException('Hanya admin rack yang bisa membuat box');
     }
 
-    // 🔐 harus rack milik sendiri
     if (rack.userId !== user.sub) {
       throw new ForbiddenException(
         'Anda hanya bisa menggunakan rack milik sendiri',
       );
     }
 
-    // ❗ rack harus active
     if (rack.status !== StatusRack.active) {
       throw new BadRequestException('Rack belum aktif');
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    const counter = await this.prisma.counter.upsert({
+      where: { id: 'box' },
+      update: { value: { increment: 1 } },
+      create: { id: 'box', value: 1 },
+    });
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    const kode_box = `BOX-${String(counter.value).padStart(3, '0')}`;
+
     return this.prisma.box.create({
       data: {
+        kode_box,
         name_box: dto.name_box,
         description: dto.description,
         rackId: dto.rackId,

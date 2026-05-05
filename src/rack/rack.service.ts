@@ -20,10 +20,9 @@ export class RackService {
       },
     });
   }
+
   async approve(id: string) {
-    const rack = await this.prisma.rack.findUnique({
-      where: { id },
-    });
+    const rack = await this.prisma.rack.findUnique({ where: { id } });
 
     if (!rack) {
       throw new NotFoundException('Rack tidak ditemukan');
@@ -36,9 +35,7 @@ export class RackService {
   }
 
   async reject(id: string) {
-    const rack = await this.prisma.rack.findUnique({
-      where: { id },
-    });
+    const rack = await this.prisma.rack.findUnique({ where: { id } });
 
     if (!rack) {
       throw new NotFoundException('Rack tidak ditemukan');
@@ -50,21 +47,15 @@ export class RackService {
     });
   }
 
-  async getProfile(userId: string) {
-    const rack = await this.prisma.rack.findFirst({
+  async findMyRacks(userId: string) {
+    return this.prisma.rack.findMany({
       where: { userId },
     });
-
-    if (!rack) {
-      throw new NotFoundException('Rack tidak ditemukan');
-    }
-
-    return rack;
   }
 
-  async updateProfile(userId: string, dto: UpdateRackDto) {
+  async updateRack(id: string, userId: string, dto: UpdateRackDto) {
     const rack = await this.prisma.rack.findFirst({
-      where: { userId },
+      where: { id, userId },
     });
 
     if (!rack) {
@@ -72,10 +63,24 @@ export class RackService {
     }
 
     return this.prisma.rack.update({
-      where: { id: rack.id },
+      where: { id },
       data: {
         ...(dto.name_rack && { name_rack: dto.name_rack }),
       },
+    });
+  }
+
+  async deleteRack(id: string, userId: string) {
+    const rack = await this.prisma.rack.findFirst({
+      where: { id, userId },
+    });
+
+    if (!rack) {
+      throw new NotFoundException('Rack tidak ditemukan');
+    }
+
+    return this.prisma.rack.delete({
+      where: { id },
     });
   }
 }

@@ -52,7 +52,7 @@ export class BoxesController {
   }
 
   @Get()
-  @Roles(Role.super_admin)
+  @Roles(Role.super_admin, Role.admin_rack, Role.user)
   @ApiOperation({ summary: 'Get all boxes (super admin)' })
   findAll(@Req() req: any) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
@@ -61,7 +61,7 @@ export class BoxesController {
   }
 
   @Get('rack/:rackId')
-  @Roles(Role.super_admin, Role.admin_rack)
+  @Roles(Role.super_admin, Role.admin_rack, Role.user)
   @ApiOperation({ summary: 'Get boxes by rack' })
   @ApiParam({
     name: 'rackId',
@@ -74,7 +74,7 @@ export class BoxesController {
   }
 
   @Get(':id')
-  @Roles(Role.super_admin, Role.admin_rack)
+  @Roles(Role.super_admin, Role.admin_rack, Role.user)
   @ApiOperation({ summary: 'Get detail box' })
   @ApiParam({
     name: 'id',

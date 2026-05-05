@@ -67,6 +67,7 @@ model Rack {
 
 model Box {
   id          String   @id @default(uuid())
+  kode_box    String   @unique
   name_box       String
   description String   @db.VarChar(150)
 
@@ -79,6 +80,11 @@ model Box {
   documents Document[]
 
   @@index([rackId])
+}
+
+model Counter {
+  id    String @id
+  value Int
 }
 
 model Document {
