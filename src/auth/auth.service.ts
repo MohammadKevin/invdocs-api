@@ -37,7 +37,7 @@ export class AuthService {
         email: dto.email,
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         password: hashedPassword,
-        role: Role.user,
+        role: dto.role === 'super admin' ? Role.admin_rack : Role.user,
       },
     });
 
