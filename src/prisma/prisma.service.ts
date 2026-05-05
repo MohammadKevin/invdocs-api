@@ -4,5 +4,5 @@ import { Injectable } from '@nestjs/common';
 export class PrismaService {
   user: any;
   rack: any;
-    box: any;
+  box: any;
 }
