@@ -4,6 +4,10 @@ import { AuthService } from './auth.service';
 import { RegisterUserDto } from './dto/register-user.dto';
 import { RegisterAdminDto } from './dto/register-admin.dto';
 import { LoginDto } from './dto/login.dto';
+import { Roles } from 'src/auth/Decorators/roles.decorator';
+import { RolesGuard } from 'src/auth/guard/roles.guard';
+
+import { Role } from '@prisma/client';
 
 import { ApiTags, ApiOperation, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
 
@@ -21,6 +25,8 @@ export class AuthController {
     return this.authService.registerUser(dto);
   }
 
+  @UseGuards(RolesGuard)
+  @Roles(Role.super_admin)
   @Post('register-admin')
   @ApiOperation({ summary: 'Register admin rack (butuh approval)' })
   @ApiBody({ type: RegisterAdminDto })
