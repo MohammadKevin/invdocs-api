@@ -63,28 +63,8 @@ export class BoxesService {
     });
   }
 
-  async findAll(user: JwtUser) {
-    if (user.role !== Role.super_admin && user.role !== Role.admin_rack) {
-      throw new ForbiddenException(
-        'Hanya super admin yang bisa melihat semua box',
-      );
-    }
-
-    return this.prisma.box.findMany({
-      include: {
-        rack: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-              },
-            },
-          },
-        },
-      },
-    });
+  async findAll() {
+    return this.prisma.box.findMany();
   }
 
   async findByRack(rackId: string, user: JwtUser) {

@@ -45,10 +45,8 @@ export class BoxesController {
 
   @Get()
   @Roles(Role.super_admin, Role.admin_rack, Role.user)
-  findAll(@Req() req: any) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-    const user: JwtUser = req.user;
-    return this.boxesService.findAll(user);
+  findAll() {
+    return this.boxesService.findAll();
   }
 
   @Get(':id')
