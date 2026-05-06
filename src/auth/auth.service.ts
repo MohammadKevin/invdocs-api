@@ -111,7 +111,14 @@ export class AuthService {
 
   async login(dto: LoginDto) {
     const user = await this.validateUser(dto.email, dto.password);
-    return this.generateToken(user);
+    return {
+      message: 'Berhasil',
+      access_token: this.jwtService.sign({
+        sub: user.id,
+        email: user.email,
+        role: user.role,
+      }),
+    };
   }
 
   private generateToken(user: User) {
