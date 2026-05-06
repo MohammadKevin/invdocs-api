@@ -25,11 +25,9 @@ export class AuthController {
     return this.authService.registerUser(dto);
   }
 
-  @UseGuards(RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.super_admin)
   @Post('register-admin')
-  @ApiOperation({ summary: 'Register admin rack (butuh approval)' })
-  @ApiBody({ type: RegisterAdminDto })
   registerAdmin(@Body() dto: RegisterAdminDto) {
     return this.authService.registerAdmin(dto);
   }
