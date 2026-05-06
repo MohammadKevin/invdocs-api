@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -12,16 +11,12 @@ import { RackModule } from './rack/rack.module';
 import { BoxesModule } from './boxes/boxes.module';
 import { DocumentsModule } from './documents/documents.module';
 
-// 🔥 STATIC FILES
 import { ServeStaticModule } from '@nestjs/serve-static';
 
 import { join } from 'path';
 
 @Module({
   imports: [
-    // =========================
-    // ENV
-    // =========================
     ConfigModule.forRoot({
       isGlobal: true,
 
@@ -29,18 +24,16 @@ import { join } from 'path';
         process.env.NODE_ENV === 'production' ? '.env.production' : '.env',
     }),
 
-    // =========================
-    // STATIC UPLOADS
-    // =========================
     ServeStaticModule.forRoot({
       rootPath: join(process.cwd(), 'uploads'),
 
       serveRoot: '/uploads',
+
+      serveStaticOptions: {
+        index: false,
+      },
     }),
 
-    // =========================
-    // MODULES
-    // =========================
     AuthModule,
     PrismaModule,
     UsersModule,
