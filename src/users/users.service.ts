@@ -24,6 +24,7 @@ export class UsersService {
           select: {
             id: true,
             name_rack: true,
+            createdAt: true,
           },
         },
       },
