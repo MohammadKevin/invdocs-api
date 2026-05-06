@@ -3,9 +3,13 @@ import {
   UnauthorizedException,
   BadRequestException,
 } from '@nestjs/common';
+
 import { PrismaService } from 'src/prisma/prisma.service';
+
 import { JwtService } from '@nestjs/jwt';
+
 import * as bcrypt from 'bcrypt';
+
 import { User, Role, StatusRack } from '@prisma/client';
 
 import { RegisterUserDto } from './dto/register-user.dto';
@@ -21,13 +25,14 @@ export class AuthService {
 
   async registerUser(dto: RegisterUserDto) {
     const exist = await this.prisma.user.findUnique({
-      where: { email: dto.email },
+      where: {
+        email: dto.email,
+      },
     });
 
     if (exist) {
       throw new BadRequestException('Email sudah digunakan');
     }
-
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     const hashedPassword = await bcrypt.hash(dto.password, 10);
 
@@ -37,6 +42,7 @@ export class AuthService {
         email: dto.email,
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         password: hashedPassword,
+
         role: dto.role === 'super admin' ? Role.admin_rack : Role.user,
       },
     });
@@ -46,7 +52,9 @@ export class AuthService {
 
   async registerAdmin(dto: RegisterAdminDto) {
     const exist = await this.prisma.user.findUnique({
-      where: { email: dto.email },
+      where: {
+        email: dto.email,
+      },
     });
 
     if (exist) {
@@ -62,7 +70,9 @@ export class AuthService {
         email: dto.email,
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         password: hashedPassword,
+
         role: Role.admin_rack,
+
         racks: {
           create: {
             name_rack: dto.name_rack,
@@ -79,8 +89,13 @@ export class AuthService {
 
   async validateUser(email: string, password: string): Promise<User> {
     const user = await this.prisma.user.findUnique({
-      where: { email: email.trim() },
-      include: { racks: true },
+      where: {
+        email: email.trim(),
+      },
+
+      include: {
+        racks: true,
+      },
     });
 
     if (!user) {
@@ -111,12 +126,14 @@ export class AuthService {
 
   async login(dto: LoginDto) {
     const user = await this.validateUser(dto.email, dto.password);
+
     return this.generateToken(user);
   }
 
   private generateToken(user: User) {
     return {
       message: 'Berhasil',
+
       access_token: this.jwtService.sign({
         sub: user.id,
         email: user.email,

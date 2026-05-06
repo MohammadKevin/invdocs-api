@@ -136,7 +136,6 @@ export class DocumentsController {
     return this.documentsService.approve(id, user);
   }
 
-  // 🔥 REJECT (ADMIN)
   @Patch(':id/reject')
   @Roles(Role.admin_rack)
   @ApiOperation({ summary: 'Reject document (admin)' })
@@ -146,7 +145,6 @@ export class DocumentsController {
     return this.documentsService.reject(id, user);
   }
 
-  // 🔥 DOWNLOAD (SEMUA ROLE)
   @Get(':id/download')
   @Roles(Role.super_admin, Role.admin_rack, Role.user)
   @ApiOperation({ summary: 'Download document' })

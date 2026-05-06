@@ -44,7 +44,6 @@ model User {
   racks         Rack[]
   documents     Document[] @relation("UserDocuments")
   verifiedDocs  Document[] @relation("VerifiedBy")
-  
 
   @@index([email])
 }
