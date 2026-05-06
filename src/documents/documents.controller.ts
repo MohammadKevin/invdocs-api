@@ -93,7 +93,6 @@ export class DocumentsController {
     return this.documentsService.findMyDocuments(user);
   }
 
-  // 🔥 DETAIL
   @Get(':id')
   @Roles(Role.super_admin, Role.admin_rack, Role.user)
   @ApiOperation({ summary: 'Get document detail' })
@@ -102,7 +101,6 @@ export class DocumentsController {
     return this.documentsService.findOne(id);
   }
 
-  // 🔥 UPDATE (USER)
   @Patch(':id')
   @Roles(Role.user)
   @ApiOperation({ summary: 'Update document (user only)' })
