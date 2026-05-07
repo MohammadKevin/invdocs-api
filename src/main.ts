@@ -9,6 +9,7 @@ import { ConfigService } from '@nestjs/config';
 import { NestExpressApplication } from '@nestjs/platform-express';
 
 import helmet from 'helmet';
+
 import morgan from 'morgan';
 
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
@@ -30,9 +31,7 @@ async function bootstrap() {
     });
   }
 
-  app.useStaticAssets(uploadPath, {
-    prefix: '/uploads/',
-  });
+  app.useStaticAssets(join(process.cwd(), 'uploads'));
 
   app.use(helmet());
 
@@ -80,11 +79,13 @@ async function bootstrap() {
 
   await app.listen(port);
 
-  console.log(`🚀 http://localhost:${port}/api`);
+  console.log(`🚀 Server running on port ${port}`);
 
-  console.log(`📘 http://localhost:${port}/docs`);
+  console.log(`📘 Swagger: http://localhost:${port}/docs`);
 
-  console.log(`📂 http://localhost:${port}/uploads`);
+  console.log(
+    `📂 Uploads: http://localhost:${port}/uploads/documents/file.jpg`,
+  );
 }
 
 bootstrap();
