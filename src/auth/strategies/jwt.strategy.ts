@@ -5,7 +5,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 
 interface JwtPayload {
-  sub: string; // ✅ UUID STRING
+  sub: string;
   email: string;
   role: string;
 }

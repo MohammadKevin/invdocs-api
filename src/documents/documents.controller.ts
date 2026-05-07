@@ -11,7 +11,10 @@ import {
   UseInterceptors,
   UploadedFile,
   Res,
+  HttpStatus,
 } from '@nestjs/common';
+
+import type { Response } from 'express';
 
 import { DocumentsService } from './documents.service';
 import { CreateDocumentDto } from './dto/create-document.dto';
@@ -29,14 +32,12 @@ import {
 import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/guard/roles.guard';
 import { Roles } from 'src/auth/Decorators/roles.decorator';
-
+import { Public } from 'src/auth/Decorators/public.decorator';
 import { Role } from '@prisma/client';
 
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
-
-import express from 'express';
 
 interface JwtUser {
   id: string;
@@ -46,8 +47,8 @@ interface JwtUser {
 
 @ApiTags('Documents')
 @ApiBearerAuth()
-@Controller('documents')
 @UseGuards(JwtAuthGuard, RolesGuard)
+@Controller('documents')
 export class DocumentsController {
   constructor(
     private readonly documentsService: DocumentsService,
@@ -127,7 +128,8 @@ export class DocumentsController {
 
   @Patch(':id/approve')
   @Roles(Role.admin_rack)
-  @ApiOperation({ summary: 'Approve document (admin)' })
+  @ApiOperation({ summary: 'Approve document (admin_rack only)' })
+  @ApiParam({ name: 'id' })
   approve(@Param('id') id: string, @Req() req: any) {
     const user: JwtUser = req.user;
     return this.documentsService.approve(id, user);
@@ -135,25 +137,27 @@ export class DocumentsController {
 
   @Patch(':id/reject')
   @Roles(Role.admin_rack)
-  @ApiOperation({ summary: 'Reject document (admin)' })
+  @ApiOperation({ summary: 'Reject document (admin_rack only)' })
+  @ApiParam({ name: 'id' })
   reject(@Param('id') id: string, @Req() req: any) {
     const user: JwtUser = req.user;
     return this.documentsService.reject(id, user);
   }
 
   @Get(':id/download')
-  @ApiOperation({
-    summary: 'Download document',
-  })
-  async download(@Param('id') id: string, @Res() res: express.Response) {
+  @Public()
+  @ApiOperation({ summary: 'Download document (public)' })
+  @ApiParam({ name: 'id' })
+  async download(@Param('id') id: string, @Res() res: Response) {
     const doc = await this.documentsService.findOne(id);
 
-    if (!doc.fileUrl) {
-      return res.status(404).json({
+    if (!doc?.fileUrl) {
+      return res.status(HttpStatus.NOT_FOUND).json({
+        statusCode: HttpStatus.NOT_FOUND,
         message: 'File not found',
       });
     }
 
-    return res.redirect(doc.fileUrl);
+    return res.redirect(HttpStatus.FOUND, doc.fileUrl);
   }
 }

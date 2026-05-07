@@ -1,23 +1,32 @@
 import { Injectable } from '@nestjs/common';
 import { v2 as cloudinary } from 'cloudinary';
 import { Readable } from 'stream';
+import * as path from 'path';
 
 @Injectable()
 export class CloudinaryService {
   async uploadFile(file: Express.Multer.File): Promise<string> {
     return new Promise((resolve, reject) => {
+      const ext = path.extname(file.originalname).replace('.', '');
+
       const uploadStream = cloudinary.uploader.upload_stream(
         {
           folder: 'documents',
-          resource_type: 'raw',
-          format: 'pdf',
+          resource_type: 'auto',
           use_filename: true,
           unique_filename: true,
+          ...(ext && { format: ext }),
         },
         (error, result) => {
           // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
           if (error) return reject(error);
-          resolve(result!.secure_url);
+
+          const url = result!.secure_url.replace(
+            `/${result!.resource_type}/upload/`,
+            `/${result!.resource_type}/upload/fl_attachment/`,
+          );
+
+          resolve(url);
         },
       );
 
