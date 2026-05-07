@@ -31,7 +31,18 @@ async function bootstrap() {
     });
   }
 
-  app.useStaticAssets(join(process.cwd(), 'uploads'));
+  const documentsPath = join(process.cwd(), 'uploads', 'documents');
+
+  if (!fs.existsSync(documentsPath)) {
+    fs.mkdirSync(documentsPath, {
+      recursive: true,
+    });
+  }
+
+  app.useStaticAssets(join(process.cwd(), 'uploads'), {
+    prefix: '/uploads/',
+    index: false,
+  });
 
   app.use(helmet());
 
@@ -58,7 +69,7 @@ async function bootstrap() {
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Inventory API')
-    .setDescription('API Dokumentasi untuk inventory management system')
+    .setDescription('Inventory Management API')
     .setVersion('1.0')
     .addBearerAuth(
       {
@@ -83,8 +94,10 @@ async function bootstrap() {
 
   console.log(`📘 Swagger: http://localhost:${port}/docs`);
 
+  console.log(`📂 Upload Path: ${documentsPath}`);
+
   console.log(
-    `📂 Uploads: http://localhost:${port}/uploads/documents/file.jpg`,
+    `🌐 File URL Example: http://localhost:${port}/uploads/documents/file.pdf`,
   );
 }
 
