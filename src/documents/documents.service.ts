@@ -13,10 +13,6 @@ import { CreateDocumentDto } from './dto/create-document.dto';
 
 import { UpdateDocumentDto } from './dto/update-document.dto';
 
-import * as fs from 'fs';
-
-import { join } from 'path';
-
 interface JwtUser {
   id: string;
   role: Role;
@@ -27,53 +23,33 @@ export class DocumentsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(
+    fileUrl: string,
     file: Express.Multer.File,
     dto: CreateDocumentDto,
     user: JwtUser,
   ): Promise<Document> {
-    if (!file) {
+    if (!fileUrl) {
       throw new BadRequestException('File wajib diupload');
     }
 
     const box = await this.prisma.box.findUnique({
-      where: {
-        id: dto.boxId,
-      },
-      include: {
-        rack: true,
-      },
+      where: { id: dto.boxId },
+      include: { rack: true },
     });
 
     if (!box) {
       throw new NotFoundException('Box tidak ditemukan');
     }
 
-    const uploadDir = join(process.cwd(), 'uploads', 'documents');
-
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, {
-        recursive: true,
-      });
-    }
-
-    const fileUrl = `/uploads/documents/${file.filename}`;
-
     return this.prisma.document.create({
       data: {
         title: dto.title,
-
         description: dto.description,
-
         fileUrl,
-
         fileType: file.mimetype,
-
         fileSize: file.size,
-
         status: DocumentStatus.pending,
-
         uploadedBy: user.id,
-
         boxId: dto.boxId,
       },
     });
@@ -85,35 +61,24 @@ export class DocumentsService {
         box: true,
         user: true,
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
+      orderBy: { createdAt: 'desc' },
     });
   }
 
   async findMyDocuments(user: JwtUser) {
     return this.prisma.document.findMany({
-      where: {
-        uploadedBy: user.id,
-      },
-      include: {
-        box: true,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
+      where: { uploadedBy: user.id },
+      include: { box: true },
+      orderBy: { createdAt: 'desc' },
     });
   }
 
   async findOne(id: string): Promise<Document> {
     const doc = await this.prisma.document.findUnique({
       where: { id },
-
       include: {
         box: {
-          include: {
-            rack: true,
-          },
+          include: { rack: true },
         },
       },
     });
@@ -130,9 +95,7 @@ export class DocumentsService {
     dto: UpdateDocumentDto,
     user: JwtUser,
   ): Promise<Document> {
-    const doc = await this.prisma.document.findUnique({
-      where: { id },
-    });
+    const doc = await this.prisma.document.findUnique({ where: { id } });
 
     if (!doc) {
       throw new NotFoundException('Dokumen tidak ditemukan');
@@ -148,23 +111,15 @@ export class DocumentsService {
 
     return this.prisma.document.update({
       where: { id },
-
       data: {
-        ...(dto.title && {
-          title: dto.title,
-        }),
-
-        ...(dto.description && {
-          description: dto.description,
-        }),
+        ...(dto.title && { title: dto.title }),
+        ...(dto.description && { description: dto.description }),
       },
     });
   }
 
   async remove(id: string, user: JwtUser): Promise<Document> {
-    const doc = await this.prisma.document.findUnique({
-      where: { id },
-    });
+    const doc = await this.prisma.document.findUnique({ where: { id } });
 
     if (!doc) {
       throw new NotFoundException('Dokumen tidak ditemukan');
@@ -174,17 +129,7 @@ export class DocumentsService {
       throw new ForbiddenException('Akses ditolak');
     }
 
-    const filename = doc.fileUrl.split('/').pop() as string;
-
-    const filePath = join(process.cwd(), 'uploads', 'documents', filename);
-
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-    }
-
-    return this.prisma.document.delete({
-      where: { id },
-    });
+    return this.prisma.document.delete({ where: { id } });
   }
 
   async approve(id: string, user: JwtUser): Promise<Document> {
@@ -192,9 +137,7 @@ export class DocumentsService {
       throw new ForbiddenException('Hanya admin yang bisa approve');
     }
 
-    const doc = await this.prisma.document.findUnique({
-      where: { id },
-    });
+    const doc = await this.prisma.document.findUnique({ where: { id } });
 
     if (!doc) {
       throw new NotFoundException('Dokumen tidak ditemukan');
@@ -202,10 +145,8 @@ export class DocumentsService {
 
     return this.prisma.document.update({
       where: { id },
-
       data: {
         status: DocumentStatus.approved,
-
         verifiedBy: user.id,
       },
     });
@@ -216,9 +157,7 @@ export class DocumentsService {
       throw new ForbiddenException('Hanya admin yang bisa reject');
     }
 
-    const doc = await this.prisma.document.findUnique({
-      where: { id },
-    });
+    const doc = await this.prisma.document.findUnique({ where: { id } });
 
     if (!doc) {
       throw new NotFoundException('Dokumen tidak ditemukan');
@@ -226,10 +165,8 @@ export class DocumentsService {
 
     return this.prisma.document.update({
       where: { id },
-
       data: {
         status: DocumentStatus.rejected,
-
         verifiedBy: user.id,
       },
     });

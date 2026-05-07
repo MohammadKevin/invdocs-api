@@ -33,10 +33,10 @@ import { Roles } from 'src/auth/Decorators/roles.decorator';
 import { Role } from '@prisma/client';
 
 import { FileInterceptor } from '@nestjs/platform-express';
-import { multerConfig } from './multer.config';
+import { memoryStorage } from 'multer';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
 import express from 'express';
-import { join } from 'path';
 
 interface JwtUser {
   id: string;
@@ -49,11 +49,14 @@ interface JwtUser {
 @Controller('documents')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class DocumentsController {
-  constructor(private readonly documentsService: DocumentsService) {}
+  constructor(
+    private readonly documentsService: DocumentsService,
+    private readonly cloudinaryService: CloudinaryService,
+  ) {}
 
   @Post('upload')
   @Roles(Role.user)
-  @UseInterceptors(FileInterceptor('file', multerConfig))
+  @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
   @ApiOperation({ summary: 'Upload document (user only)' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -67,14 +70,14 @@ export class DocumentsController {
       },
     },
   })
-  upload(
+  async upload(
     @UploadedFile() file: Express.Multer.File,
     @Body() dto: CreateDocumentDto,
     @Req() req: any,
   ) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     const user: JwtUser = req.user;
-    return this.documentsService.create(file, dto, user);
+    const fileUrl = await this.cloudinaryService.uploadFile(file);
+    return this.documentsService.create(fileUrl, file, dto, user);
   }
 
   @Get()
@@ -88,7 +91,6 @@ export class DocumentsController {
   @Roles(Role.user)
   @ApiOperation({ summary: 'Get my documents' })
   getMy(@Req() req: any) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     const user: JwtUser = req.user;
     return this.documentsService.findMyDocuments(user);
   }
@@ -110,28 +112,23 @@ export class DocumentsController {
     @Body() dto: UpdateDocumentDto,
     @Req() req: any,
   ) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     const user: JwtUser = req.user;
     return this.documentsService.update(id, dto, user);
   }
 
-  // 🔥 DELETE (USER)
   @Delete(':id')
   @Roles(Role.user)
   @ApiOperation({ summary: 'Delete document (user only)' })
   @ApiParam({ name: 'id' })
   remove(@Param('id') id: string, @Req() req: any) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     const user: JwtUser = req.user;
     return this.documentsService.remove(id, user);
   }
 
-  // 🔥 APPROVE (ADMIN)
   @Patch(':id/approve')
   @Roles(Role.admin_rack)
   @ApiOperation({ summary: 'Approve document (admin)' })
   approve(@Param('id') id: string, @Req() req: any) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     const user: JwtUser = req.user;
     return this.documentsService.approve(id, user);
   }
@@ -140,31 +137,20 @@ export class DocumentsController {
   @Roles(Role.admin_rack)
   @ApiOperation({ summary: 'Reject document (admin)' })
   reject(@Param('id') id: string, @Req() req: any) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     const user: JwtUser = req.user;
     return this.documentsService.reject(id, user);
   }
 
   @Get(':id/download')
   @Roles(Role.super_admin, Role.admin_rack, Role.user)
-  @ApiOperation({
-    summary: 'Download document',
-  })
+  @ApiOperation({ summary: 'Download document' })
   async download(@Param('id') id: string, @Res() res: express.Response) {
     const doc = await this.documentsService.findOne(id);
 
-    const filename = doc.fileUrl.split('/').pop() as string;
-
-    const filePath = join(process.cwd(), 'uploads', 'documents', filename);
-
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-member-access
-    if (!require('fs').existsSync(filePath)) {
-      return res.status(404).json({
-        message: 'File not found',
-        path: filePath,
-      });
+    if (!doc.fileUrl) {
+      return res.status(404).json({ message: 'File not found' });
     }
 
-    return res.sendFile(filePath);
+    return res.redirect(doc.fileUrl);
   }
 }
