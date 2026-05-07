@@ -142,7 +142,6 @@ export class DocumentsController {
   }
 
   @Get(':id/download')
-  @Roles(Role.super_admin, Role.admin_rack, Role.user)
   @ApiOperation({ summary: 'Download document' })
   async download(@Param('id') id: string, @Res() res: express.Response) {
     const doc = await this.documentsService.findOne(id);
