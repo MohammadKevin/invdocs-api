@@ -6,10 +6,16 @@ import {
 } from '@nestjs/common';
 
 import { PrismaService } from 'src/prisma/prisma.service';
+
 import { Document, Role, DocumentStatus } from '@prisma/client';
 
 import { CreateDocumentDto } from './dto/create-document.dto';
+
 import { UpdateDocumentDto } from './dto/update-document.dto';
+
+import * as fs from 'fs';
+
+import { join } from 'path';
 
 interface JwtUser {
   id: string;
@@ -30,12 +36,24 @@ export class DocumentsService {
     }
 
     const box = await this.prisma.box.findUnique({
-      where: { id: dto.boxId },
-      include: { rack: true },
+      where: {
+        id: dto.boxId,
+      },
+      include: {
+        rack: true,
+      },
     });
 
     if (!box) {
       throw new NotFoundException('Box tidak ditemukan');
+    }
+
+    const uploadDir = join(process.cwd(), 'uploads', 'documents');
+
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, {
+        recursive: true,
+      });
     }
 
     const fileUrl = `/uploads/documents/${file.filename}`;
@@ -43,15 +61,19 @@ export class DocumentsService {
     return this.prisma.document.create({
       data: {
         title: dto.title,
+
         description: dto.description,
 
         fileUrl,
+
         fileType: file.mimetype,
+
         fileSize: file.size,
 
         status: DocumentStatus.pending,
 
         uploadedBy: user.id,
+
         boxId: dto.boxId,
       },
     });
@@ -61,6 +83,10 @@ export class DocumentsService {
     return this.prisma.document.findMany({
       include: {
         box: true,
+        user: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
       },
     });
   }
@@ -70,12 +96,19 @@ export class DocumentsService {
       where: {
         uploadedBy: user.id,
       },
+      include: {
+        box: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
     });
   }
 
   async findOne(id: string): Promise<Document> {
     const doc = await this.prisma.document.findUnique({
       where: { id },
+
       include: {
         box: {
           include: {
@@ -110,16 +143,20 @@ export class DocumentsService {
     }
 
     if (doc.status !== DocumentStatus.pending) {
-      throw new BadRequestException(
-        'Dokumen sudah diproses, tidak bisa diubah',
-      );
+      throw new BadRequestException('Dokumen sudah diproses');
     }
 
     return this.prisma.document.update({
       where: { id },
+
       data: {
-        ...(dto.title && { title: dto.title }),
-        ...(dto.description && { description: dto.description }),
+        ...(dto.title && {
+          title: dto.title,
+        }),
+
+        ...(dto.description && {
+          description: dto.description,
+        }),
       },
     });
   }
@@ -137,6 +174,14 @@ export class DocumentsService {
       throw new ForbiddenException('Akses ditolak');
     }
 
+    const filename = doc.fileUrl.split('/').pop() as string;
+
+    const filePath = join(process.cwd(), 'uploads', 'documents', filename);
+
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+
     return this.prisma.document.delete({
       where: { id },
     });
@@ -149,7 +194,6 @@ export class DocumentsService {
 
     const doc = await this.prisma.document.findUnique({
       where: { id },
-      include: { box: { include: { rack: true } } },
     });
 
     if (!doc) {
@@ -158,8 +202,10 @@ export class DocumentsService {
 
     return this.prisma.document.update({
       where: { id },
+
       data: {
         status: DocumentStatus.approved,
+
         verifiedBy: user.id,
       },
     });
@@ -180,8 +226,10 @@ export class DocumentsService {
 
     return this.prisma.document.update({
       where: { id },
+
       data: {
         status: DocumentStatus.rejected,
+
         verifiedBy: user.id,
       },
     });

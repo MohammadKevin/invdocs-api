@@ -147,18 +147,24 @@ export class DocumentsController {
 
   @Get(':id/download')
   @Roles(Role.super_admin, Role.admin_rack, Role.user)
-  @ApiOperation({ summary: 'Download document' })
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+  @ApiOperation({
+    summary: 'Download document',
+  })
   async download(@Param('id') id: string, @Res() res: express.Response) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     const doc = await this.documentsService.findOne(id);
 
-    const filePath = join(
-      process.cwd(),
-      'uploads/documents',
-      doc.fileUrl.split('/').pop() as string,
-    );
+    const filename = doc.fileUrl.split('/').pop() as string;
 
-    return res.download(filePath);
+    const filePath = join(process.cwd(), 'uploads', 'documents', filename);
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-member-access
+    if (!require('fs').existsSync(filePath)) {
+      return res.status(404).json({
+        message: 'File not found',
+        path: filePath,
+      });
+    }
+
+    return res.sendFile(filePath);
   }
 }
