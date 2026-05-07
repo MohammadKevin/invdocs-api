@@ -142,12 +142,16 @@ export class DocumentsController {
   }
 
   @Get(':id/download')
-  @ApiOperation({ summary: 'Download document' })
+  @ApiOperation({
+    summary: 'Download document',
+  })
   async download(@Param('id') id: string, @Res() res: express.Response) {
     const doc = await this.documentsService.findOne(id);
 
     if (!doc.fileUrl) {
-      return res.status(404).json({ message: 'File not found' });
+      return res.status(404).json({
+        message: 'File not found',
+      });
     }
 
     return res.redirect(doc.fileUrl);
