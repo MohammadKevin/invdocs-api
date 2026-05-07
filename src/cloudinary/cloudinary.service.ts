@@ -12,7 +12,7 @@ export class CloudinaryService {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
           folder: 'documents',
-          resource_type: 'auto',
+          resource_type: 'raw',
           use_filename: true,
           unique_filename: true,
           ...(ext && { format: ext }),
@@ -22,8 +22,8 @@ export class CloudinaryService {
           if (error) return reject(error);
 
           const url = result!.secure_url.replace(
-            `/${result!.resource_type}/upload/`,
-            `/${result!.resource_type}/upload/fl_attachment/`,
+            '/raw/upload/',
+            '/raw/upload/fl_attachment/',
           );
 
           resolve(url);
