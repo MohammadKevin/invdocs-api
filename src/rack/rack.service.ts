@@ -27,7 +27,7 @@ export class RackService {
         user: {
           select: {
             id: true,
-            name_rack: true,
+            name: true,
           },
         },
       },
