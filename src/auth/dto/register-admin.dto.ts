@@ -1,9 +1,9 @@
 import {
   IsEmail,
-  IsNotEmpty,
-  MinLength,
-  MaxLength,
   IsEnum,
+  IsNotEmpty,
+  MaxLength,
+  MinLength,
 } from 'class-validator';
 
 import { Divisi } from '@prisma/client';
