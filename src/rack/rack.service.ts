@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 
 import { PrismaService } from 'src/prisma/prisma.service';
 
-import { StatusRack } from '@prisma/client';
+import { StatusRack, Divisi } from '@prisma/client';
 
 import { UpdateRackDto } from './dto/update-rack.dto';
 
@@ -10,90 +10,11 @@ import { UpdateRackDto } from './dto/update-rack.dto';
 export class RackService {
   constructor(private prisma: PrismaService) {}
 
-  async findPending() {
-    return this.prisma.rack.findMany({
-      where: {
-        status: StatusRack.pending,
-      },
-
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-      },
-
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
-  }
-
-  async approve(id: string) {
-    const rack = await this.prisma.rack.findUnique({
-      where: { id },
-    });
-
-    if (!rack) {
-      throw new NotFoundException('Rack tidak ditemukan');
-    }
-
-    return this.prisma.rack.update({
-      where: {
-        id,
-      },
-
-      data: {
-        status: StatusRack.active,
-      },
-    });
-  }
-
-  async reject(id: string) {
-    const rack = await this.prisma.rack.findUnique({
-      where: { id },
-    });
-
-    if (!rack) {
-      throw new NotFoundException('Rack tidak ditemukan');
-    }
-
-    return this.prisma.rack.update({
-      where: {
-        id,
-      },
-
-      data: {
-        status: StatusRack.inactive,
-      },
-    });
-  }
-
-  async findMyRacks(userId: string) {
-    return this.prisma.rack.findMany({
-      where: {
-        userId,
-      },
-
-      include: {
-        boxes: true,
-      },
-
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
-  }
-
   async findAllDivisionRacks() {
     return this.prisma.rack.findMany({
       where: {
-        status: 'active',
+        status: StatusRack.active,
       },
-
       select: {
         id: true,
         name_rack: true,
@@ -101,70 +22,72 @@ export class RackService {
         status: true,
         createdAt: true,
       },
-
       orderBy: {
         createdAt: 'desc',
       },
     });
   }
 
-  async updateRack(id: string, userId: string, dto: UpdateRackDto) {
-    const rack = await this.prisma.rack.findFirst({
+  async findRackByDivision(divisi: string) {
+    return this.prisma.rack.findMany({
       where: {
-        id,
-        userId,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        divisi: divisi as Divisi,
+        status: StatusRack.active,
+      },
+      select: {
+        id: true,
+        name_rack: true,
+        divisi: true,
+        status: true,
+        createdAt: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
       },
     });
+  }
 
-    if (!rack) {
-      throw new NotFoundException('Rack tidak ditemukan');
-    }
+  async findMyRacks(userId: string) {
+    return this.prisma.rack.findMany({
+      where: { userId },
+      include: { boxes: true },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async updateRack(id: string, userId: string, dto: UpdateRackDto) {
+    const rack = await this.prisma.rack.findFirst({
+      where: { id, userId },
+    });
+
+    if (!rack) throw new NotFoundException('Rack tidak ditemukan');
 
     return this.prisma.rack.update({
-      where: {
-        id,
-      },
-
+      where: { id },
       data: dto,
     });
   }
 
   async deleteRack(id: string, userId: string) {
     const rack = await this.prisma.rack.findFirst({
-      where: {
-        id,
-        userId,
-      },
+      where: { id, userId },
     });
 
-    if (!rack) {
-      throw new NotFoundException('Rack tidak ditemukan');
-    }
+    if (!rack) throw new NotFoundException('Rack tidak ditemukan');
 
     return this.prisma.rack.delete({
-      where: {
-        id,
-      },
+      where: { id },
     });
   }
 
   async findAllRacks() {
     return this.prisma.rack.findMany({
       include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-
+        user: true,
         boxes: true,
       },
-
-      orderBy: {
-        createdAt: 'desc',
-      },
+      orderBy: { createdAt: 'desc' },
     });
   }
 }
