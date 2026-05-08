@@ -22,7 +22,6 @@ import { Role } from '@prisma/client';
 @ApiTags('Rack')
 @ApiBearerAuth()
 @Controller('rack')
-@UseGuards(JwtAuthGuard)
 export class RackController {
   constructor(private readonly rackService: RackService) {}
 
