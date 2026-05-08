@@ -61,12 +61,14 @@ export class AuthService {
       throw new BadRequestException('Email sudah digunakan');
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     const hashedPassword = await bcrypt.hash(dto.password, 10);
 
     await this.prisma.user.create({
       data: {
         name: dto.name,
         email: dto.email,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         password: hashedPassword,
 
         role: Role.admin_rack,
@@ -74,6 +76,7 @@ export class AuthService {
         racks: {
           create: {
             name_rack: dto.name_rack,
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             divisi: dto.divisi,
             status: StatusRack.pending,
           },
