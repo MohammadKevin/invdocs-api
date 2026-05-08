@@ -31,6 +31,18 @@ enum DocumentStatus {
   rejected
 }
 
+enum Divisi {
+  HR
+  Finance
+  IT
+  Marketing
+  Sales
+  Operations
+  Legal
+  RnD
+  Admin
+}
+
 model User {
   id        String   @id @default(uuid())
   email     String   @unique
@@ -52,6 +64,7 @@ model Rack {
   id        String     @id @default(uuid())
   name_rack      String
   status    StatusRack @default(pending)
+  divisi    Divisi
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

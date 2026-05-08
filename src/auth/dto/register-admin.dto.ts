@@ -1,4 +1,12 @@
-import { IsEmail, IsNotEmpty, MinLength, MaxLength } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  MinLength,
+  MaxLength,
+  IsEnum,
+} from 'class-validator';
+
+import { Divisi } from '@prisma/client';
 
 export class RegisterAdminDto {
   @IsNotEmpty()
@@ -14,4 +22,7 @@ export class RegisterAdminDto {
 
   @IsNotEmpty()
   name_rack!: string;
+
+  @IsEnum(Divisi)
+  divisi!: Divisi;
 }

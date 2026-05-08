@@ -75,7 +75,11 @@ export class AuthService {
 
         racks: {
           create: {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             name_rack: dto.name_rack,
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            divisi: dto.divisi,
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             status: StatusRack.pending,
           },
         },
