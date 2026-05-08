@@ -55,6 +55,11 @@ export class RackController {
     return this.rackService.findMyRacks(req.user.id);
   }
 
+  @Get('divisi')
+  findAllDivisionRacks() {
+    return this.rackService.findAllDivisionRacks();
+  }
+
   @Patch(':id/update')
   @UseGuards(RolesGuard)
   @Roles(Role.admin_rack)

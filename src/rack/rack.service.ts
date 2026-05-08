@@ -88,6 +88,26 @@ export class RackService {
     });
   }
 
+  async findAllDivisionRacks() {
+    return this.prisma.rack.findMany({
+      where: {
+        status: 'active',
+      },
+
+      select: {
+        id: true,
+        name_rack: true,
+        divisi: true,
+        status: true,
+        createdAt: true,
+      },
+
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+  }
+
   async updateRack(id: string, userId: string, dto: UpdateRackDto) {
     const rack = await this.prisma.rack.findFirst({
       where: {
