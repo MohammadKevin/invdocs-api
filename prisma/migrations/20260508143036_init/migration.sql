@@ -18,6 +18,7 @@ CREATE TABLE `Rack` (
     `id` VARCHAR(191) NOT NULL,
     `name_rack` VARCHAR(191) NOT NULL,
     `status` ENUM('pending', 'active', 'inactive') NOT NULL DEFAULT 'pending',
+    `divisi` ENUM('HR', 'Finance', 'IT', 'Marketing', 'Sales', 'Operations', 'Legal', 'RnD', 'Admin') NOT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
     `userId` VARCHAR(191) NOT NULL,
