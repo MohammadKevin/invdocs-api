@@ -31,12 +31,12 @@ interface JwtUser {
 @ApiTags('Boxes')
 @ApiBearerAuth()
 @Controller('boxes')
-@UseGuards(JwtAuthGuard, RolesGuard)
 export class BoxesController {
   constructor(private readonly boxesService: BoxesService) {}
 
   @Post()
   @Roles(Role.admin_rack)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   create(@Body() dto: CreateBoxDto, @Req() req: any) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     const user: JwtUser = req.user;
