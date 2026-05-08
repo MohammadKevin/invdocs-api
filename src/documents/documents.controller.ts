@@ -47,7 +47,6 @@ interface JwtUser {
 
 @ApiTags('Documents')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('documents')
 export class DocumentsController {
   constructor(
@@ -57,6 +56,7 @@ export class DocumentsController {
 
   @Post('upload')
   @Roles(Role.user)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
   @ApiOperation({ summary: 'Upload document (user only)' })
   @ApiConsumes('multipart/form-data')
