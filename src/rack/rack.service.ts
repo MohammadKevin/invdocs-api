@@ -1,26 +1,17 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 
 import { PrismaService } from 'src/prisma/prisma.service';
-
 import { StatusRack, Divisi } from '@prisma/client';
-
 import { UpdateRackDto } from './dto/update-rack.dto';
 
 @Injectable()
 export class RackService {
   constructor(private prisma: PrismaService) {}
 
-  async findAllDivisionRacks() {
+  async findPending() {
     return this.prisma.rack.findMany({
       where: {
-        status: StatusRack.active,
-      },
-      select: {
-        id: true,
-        name_rack: true,
-        divisi: true,
-        status: true,
-        createdAt: true,
+        status: StatusRack.pending,
       },
       orderBy: {
         createdAt: 'desc',
@@ -28,19 +19,11 @@ export class RackService {
     });
   }
 
-  async findRackByDivision(divisi: string) {
+  async findAllRacks() {
     return this.prisma.rack.findMany({
-      where: {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        divisi: divisi as Divisi,
-        status: StatusRack.active,
-      },
-      select: {
-        id: true,
-        name_rack: true,
-        divisi: true,
-        status: true,
-        createdAt: true,
+      include: {
+        user: true,
+        boxes: true,
       },
       orderBy: {
         createdAt: 'desc',
@@ -52,6 +35,38 @@ export class RackService {
     return this.prisma.rack.findMany({
       where: { userId },
       include: { boxes: true },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async findAllDivisionRacks() {
+    return this.prisma.rack.findMany({
+      where: { status: StatusRack.active },
+      select: {
+        id: true,
+        name_rack: true,
+        divisi: true,
+        status: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  // ✅ FIX TYPE ERROR: Divisi enum
+  async findRackByDivision(divisi: Divisi) {
+    return this.prisma.rack.findMany({
+      where: {
+        divisi,
+        status: StatusRack.active,
+      },
+      select: {
+        id: true,
+        name_rack: true,
+        divisi: true,
+        status: true,
+        createdAt: true,
+      },
       orderBy: { createdAt: 'desc' },
     });
   }
@@ -81,13 +96,33 @@ export class RackService {
     });
   }
 
-  async findAllRacks() {
-    return this.prisma.rack.findMany({
-      include: {
-        user: true,
-        boxes: true,
+  // =========================
+  // ✅ APPROVE / REJECT RACK
+  // =========================
+
+  async approveRack(id: string) {
+    const rack = await this.prisma.rack.findUnique({ where: { id } });
+
+    if (!rack) throw new NotFoundException('Rack tidak ditemukan');
+
+    return this.prisma.rack.update({
+      where: { id },
+      data: {
+        status: StatusRack.active,
       },
-      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async rejectRack(id: string) {
+    const rack = await this.prisma.rack.findUnique({ where: { id } });
+
+    if (!rack) throw new NotFoundException('Rack tidak ditemukan');
+
+    return this.prisma.rack.update({
+      where: { id },
+      data: {
+        status: StatusRack.inactive,
+      },
     });
   }
 }
