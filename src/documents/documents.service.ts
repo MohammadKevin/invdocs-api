@@ -6,11 +6,9 @@ import {
 } from '@nestjs/common';
 
 import { PrismaService } from 'src/prisma/prisma.service';
-
 import { Document, Role, DocumentStatus } from '@prisma/client';
 
 import { CreateDocumentDto } from './dto/create-document.dto';
-
 import { UpdateDocumentDto } from './dto/update-document.dto';
 
 interface JwtUser {
@@ -22,6 +20,9 @@ interface JwtUser {
 export class DocumentsService {
   constructor(private readonly prisma: PrismaService) {}
 
+  // =========================
+  // CREATE DOCUMENT
+  // =========================
   async create(
     fileUrl: string,
     file: Express.Multer.File,
@@ -34,7 +35,6 @@ export class DocumentsService {
 
     const box = await this.prisma.box.findUnique({
       where: { id: dto.boxId },
-      include: { rack: true },
     });
 
     if (!box) {
@@ -55,6 +55,9 @@ export class DocumentsService {
     });
   }
 
+  // =========================
+  // GET ALL
+  // =========================
   async findAll() {
     return this.prisma.document.findMany({
       include: {
@@ -65,6 +68,9 @@ export class DocumentsService {
     });
   }
 
+  // =========================
+  // MY DOCUMENTS
+  // =========================
   async findMyDocuments(user: JwtUser) {
     return this.prisma.document.findMany({
       where: { uploadedBy: user.id },
@@ -73,6 +79,9 @@ export class DocumentsService {
     });
   }
 
+  // =========================
+  // FIND ONE
+  // =========================
   async findOne(id: string): Promise<Document> {
     const doc = await this.prisma.document.findUnique({
       where: { id },
@@ -90,11 +99,10 @@ export class DocumentsService {
     return doc;
   }
 
-  async update(
-    id: string,
-    dto: UpdateDocumentDto,
-    user: JwtUser,
-  ): Promise<Document> {
+  // =========================
+  // UPDATE
+  // =========================
+  async update(id: string, dto: UpdateDocumentDto, user: JwtUser) {
     const doc = await this.prisma.document.findUnique({ where: { id } });
 
     if (!doc) {
@@ -118,7 +126,10 @@ export class DocumentsService {
     });
   }
 
-  async remove(id: string, user: JwtUser): Promise<Document> {
+  // =========================
+  // DELETE
+  // =========================
+  async remove(id: string, user: JwtUser) {
     const doc = await this.prisma.document.findUnique({ where: { id } });
 
     if (!doc) {
@@ -132,10 +143,11 @@ export class DocumentsService {
     return this.prisma.document.delete({ where: { id } });
   }
 
-  async approve(id: string, user: JwtUser): Promise<Document> {
-    if (user.role !== Role.admin_rack) {
-      throw new ForbiddenException('Hanya admin yang bisa approve');
-    }
+  // =========================
+  // APPROVE
+  // =========================
+  async approve(id: string, user: JwtUser) {
+    this.ensureAdmin(user);
 
     const doc = await this.prisma.document.findUnique({ where: { id } });
 
@@ -152,10 +164,11 @@ export class DocumentsService {
     });
   }
 
-  async reject(id: string, user: JwtUser): Promise<Document> {
-    if (user.role !== Role.admin_rack) {
-      throw new ForbiddenException('Hanya admin yang bisa reject');
-    }
+  // =========================
+  // REJECT
+  // =========================
+  async reject(id: string, user: JwtUser) {
+    this.ensureAdmin(user);
 
     const doc = await this.prisma.document.findUnique({ where: { id } });
 
@@ -170,5 +183,16 @@ export class DocumentsService {
         verifiedBy: user.id,
       },
     });
+  }
+
+  // =========================
+  // FIX ROLE CHECK (IMPORTANT)
+  // =========================
+  private ensureAdmin(user: JwtUser) {
+    const allowed: Role[] = [Role.admin_rack, Role.super_admin];
+
+    if (!allowed.includes(user.role)) {
+      throw new ForbiddenException('Akses admin diperlukan');
+    }
   }
 }
