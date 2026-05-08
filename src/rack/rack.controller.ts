@@ -70,4 +70,9 @@ export class RackController {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
     return this.rackService.deleteRack(id, req.user.id);
   }
+
+  @Get()
+  findAllRacks() {
+    return this.rackService.findAllRacks();
+  }
 }

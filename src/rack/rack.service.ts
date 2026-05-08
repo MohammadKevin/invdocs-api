@@ -21,6 +21,19 @@ export class RackService {
     });
   }
 
+  async findAllRacks() {
+    return this.prisma.rack.findMany({
+      include: {
+        user: {
+          select: {
+            id: true,
+            name_rack: true,
+          },
+        },
+      },
+    });
+  }
+
   async approve(id: string) {
     const rack = await this.prisma.rack.findUnique({ where: { id } });
 

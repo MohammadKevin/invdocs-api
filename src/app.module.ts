@@ -14,6 +14,7 @@ import { DocumentsModule } from './documents/documents.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 
 import { join } from 'path';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { join } from 'path';
     RackModule,
     BoxesModule,
     DocumentsModule,
+    MailModule,
   ],
 
   controllers: [AppController],
