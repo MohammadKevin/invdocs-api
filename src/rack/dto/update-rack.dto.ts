@@ -1,7 +1,4 @@
-import { IsOptional, MaxLength } from 'class-validator';
+import { PartialType } from '@nestjs/mapped-types';
+import { CreateRackDto } from './create-rack.dto';
 
-export class UpdateRackDto {
-  @IsOptional()
-  @MaxLength(100)
-  name_rack?: string;
-}
+export class UpdateRackDto extends PartialType(CreateRackDto) {}

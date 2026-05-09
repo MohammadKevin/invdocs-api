@@ -3,15 +3,10 @@ import {
   UnauthorizedException,
   BadRequestException,
 } from '@nestjs/common';
-
 import { PrismaService } from 'src/prisma/prisma.service';
-
 import { JwtService } from '@nestjs/jwt';
-
 import * as bcrypt from 'bcrypt';
-
 import { User, Role, StatusRack } from '@prisma/client';
-
 import { RegisterUserDto } from './dto/register-user.dto';
 import { RegisterAdminDto } from './dto/register-admin.dto';
 import { LoginDto } from './dto/login.dto';
@@ -23,6 +18,40 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
+  private async generateRackCode() {
+    const racks = await this.prisma.rack.findMany({
+      select: {
+        kode_rack: true,
+      },
+      orderBy: {
+        kode_rack: 'asc',
+      },
+    });
+
+    const usedNumbers = racks
+      .map((rack) => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+        const match = rack.kode_rack.match(/\d+/);
+
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
+        return match ? parseInt(match[0], 10) : null;
+      })
+      .filter((n): n is number => n !== null)
+      .sort((a, b) => a - b);
+
+    let nextNumber = 1;
+
+    for (const num of usedNumbers) {
+      if (num === nextNumber) {
+        nextNumber++;
+      } else {
+        break;
+      }
+    }
+
+    return `RACK-${nextNumber.toString().padStart(3, '0')}`;
+  }
+
   async registerUser(dto: RegisterUserDto) {
     const exist = await this.prisma.user.findUnique({
       where: {
@@ -33,6 +62,7 @@ export class AuthService {
     if (exist) {
       throw new BadRequestException('Email sudah digunakan');
     }
+
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     const hashedPassword = await bcrypt.hash(dto.password, 10);
 
@@ -64,6 +94,8 @@ export class AuthService {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     const hashedPassword = await bcrypt.hash(dto.password, 10);
 
+    const kode_rack = await this.generateRackCode();
+
     await this.prisma.user.create({
       data: {
         name: dto.name,
@@ -75,8 +107,7 @@ export class AuthService {
 
         racks: {
           create: {
-            name_rack: dto.name_rack,
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            kode_rack,
             divisi: dto.divisi,
             status: StatusRack.pending,
           },

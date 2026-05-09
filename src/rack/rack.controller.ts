@@ -24,36 +24,23 @@ import { Role, Divisi } from '@prisma/client';
 export class RackController {
   constructor(private readonly rackService: RackService) {}
 
-  // =========================
-  // PENDING RACK (FIX 404)
-  // =========================
   @Get('pending')
   findPending() {
     return this.rackService.findPending();
   }
 
-  // =========================
-  // ALL RACK
-  // =========================
   @Get()
   findAll() {
     return this.rackService.findAllRacks();
   }
 
-  // =========================
-  // DIVISI LIST ACTIVE RACK
-  // =========================
   @Get('divisi')
   findAllDivisions() {
     return this.rackService.findAllDivisionRacks();
   }
 
-  // =========================
-  // DIVISI FILTER (FIX ENUM ERROR)
-  // =========================
   @Get('divisi/:divisi')
   findByDivision(@Param('divisi') divisi: string) {
-    // validasi enum biar aman
     if (!Object.values(Divisi).includes(divisi as Divisi)) {
       throw new BadRequestException('Divisi tidak valid');
     }
@@ -61,43 +48,31 @@ export class RackController {
     return this.rackService.findRackByDivision(divisi as Divisi);
   }
 
-  // =========================
-  // MY RACK
-  // =========================
   @Get('my')
   @UseGuards(RolesGuard)
   @Roles(Role.admin_rack)
   findMy(@Req() req: any) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
     return this.rackService.findMyRacks(req.user.id);
   }
 
-  // =========================
-  // UPDATE
-  // =========================
   @Patch(':id')
   update(@Param('id') id: string, @Req() req: any, @Body() dto: UpdateRackDto) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
     return this.rackService.updateRack(id, req.user.id, dto);
   }
 
-  // =========================
-  // DELETE
-  // =========================
   @Delete(':id')
   delete(@Param('id') id: string, @Req() req: any) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
     return this.rackService.deleteRack(id, req.user.id);
   }
 
-  // =========================
-  // APPROVE RACK
-  // =========================
   @Patch(':id/approve')
   approve(@Param('id') id: string) {
     return this.rackService.approveRack(id);
   }
 
-  // =========================
-  // REJECT RACK
-  // =========================
   @Patch(':id/reject')
   reject(@Param('id') id: string) {
     return this.rackService.rejectRack(id);

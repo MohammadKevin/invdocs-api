@@ -31,12 +31,12 @@ interface JwtUser {
 @ApiTags('Boxes')
 @ApiBearerAuth()
 @Controller('boxes')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class BoxesController {
   constructor(private readonly boxesService: BoxesService) {}
 
   @Post()
   @Roles(Role.admin_rack)
-  @UseGuards(JwtAuthGuard, RolesGuard)
   create(@Body() dto: CreateBoxDto, @Req() req: any) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     const user: JwtUser = req.user;
@@ -49,7 +49,7 @@ export class BoxesController {
     return this.boxesService.findAll();
   }
 
-  @Get(':id')
+  @Get('rack/:rackId')
   @Roles(Role.super_admin, Role.admin_rack, Role.user)
   findByRack(@Param('rackId') rackId: string, @Req() req: any) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
@@ -70,6 +70,7 @@ export class BoxesController {
   update(@Param('id') id: string, @Body() dto: UpdateBoxDto, @Req() req: any) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     const user: JwtUser = req.user;
+
     return this.boxesService.update(id, dto, user);
   }
 
@@ -78,6 +79,7 @@ export class BoxesController {
   remove(@Param('id') id: string, @Req() req: any) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     const user: JwtUser = req.user;
+
     return this.boxesService.remove(id, user);
   }
 }

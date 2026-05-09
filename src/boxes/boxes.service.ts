@@ -4,6 +4,7 @@ import {
   ForbiddenException,
   BadRequestException,
 } from '@nestjs/common';
+
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Box, Role, StatusRack } from '@prisma/client';
 
@@ -19,6 +20,37 @@ interface JwtUser {
 @Injectable()
 export class BoxesService {
   constructor(private readonly prisma: PrismaService) {}
+
+  private async generateBoxCode() {
+    const boxes = await this.prisma.box.findMany({
+      select: {
+        kode_box: true,
+      },
+      orderBy: {
+        kode_box: 'asc',
+      },
+    });
+
+    const usedNumbers = boxes
+      .map((box) => {
+        const match = box.kode_box.match(/\d+/);
+        return match ? parseInt(match[0], 10) : null;
+      })
+      .filter((n): n is number => n !== null)
+      .sort((a, b) => a - b);
+
+    let nextNumber = 1;
+
+    for (const num of usedNumbers) {
+      if (num === nextNumber) {
+        nextNumber++;
+      } else {
+        break;
+      }
+    }
+
+    return `BOX-${nextNumber.toString().padStart(3, '0')}`;
+  }
 
   async create(dto: CreateBoxDto, user: JwtUser): Promise<Box> {
     const rack = await this.prisma.rack.findUnique({
@@ -43,20 +75,11 @@ export class BoxesService {
       throw new BadRequestException('Rack belum aktif');
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-    const counter = await this.prisma.counter.upsert({
-      where: { id: 'box' },
-      update: { value: { increment: 1 } },
-      create: { id: 'box', value: 1 },
-    });
-
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    const kode_box = `BOX-${String(counter.value).padStart(3, '0')}`;
+    const kode_box = await this.generateBoxCode();
 
     return this.prisma.box.create({
       data: {
         kode_box,
-        name_box: dto.name_box,
         description: dto.description,
         rackId: dto.rackId,
       },
@@ -64,7 +87,15 @@ export class BoxesService {
   }
 
   async findAll() {
-    return this.prisma.box.findMany();
+    return this.prisma.box.findMany({
+      include: {
+        rack: true,
+        documents: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
   }
 
   async findByRack(rackId: string, user: JwtUser) {
@@ -82,13 +113,18 @@ export class BoxesService {
 
     return this.prisma.box.findMany({
       where: { rackId },
+      orderBy: {
+        createdAt: 'desc',
+      },
     });
   }
 
   async findOne(id: string, user: JwtUser): Promise<Box> {
     const box = await this.prisma.box.findUnique({
       where: { id },
-      include: { rack: true },
+      include: {
+        rack: true,
+      },
     });
 
     if (!box) {
@@ -105,7 +141,9 @@ export class BoxesService {
   async update(id: string, dto: UpdateBoxDto, user: JwtUser): Promise<Box> {
     const box = await this.prisma.box.findUnique({
       where: { id },
-      include: { rack: true },
+      include: {
+        rack: true,
+      },
     });
 
     if (!box) {
@@ -119,8 +157,9 @@ export class BoxesService {
     return this.prisma.box.update({
       where: { id },
       data: {
-        ...(dto.name_box && { name_box: dto.name_box }),
-        ...(dto.description && { description: dto.description }),
+        ...(dto.description && {
+          description: dto.description,
+        }),
       },
     });
   }
@@ -128,7 +167,9 @@ export class BoxesService {
   async remove(id: string, user: JwtUser): Promise<Box> {
     const box = await this.prisma.box.findUnique({
       where: { id },
-      include: { rack: true },
+      include: {
+        rack: true,
+      },
     });
 
     if (!box) {

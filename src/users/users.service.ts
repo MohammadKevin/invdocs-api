@@ -1,47 +1,76 @@
 import { Injectable } from '@nestjs/common';
+
 import { PrismaService } from '../prisma/prisma.service';
-import { Prisma } from '@prisma/client';
-import { Role } from '@prisma/client';
+
+import { Prisma, Role } from '@prisma/client';
 
 @Injectable()
 export class UsersService {
   constructor(private readonly prisma: PrismaService) {}
 
   create(data: Prisma.UserCreateInput) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     return this.prisma.user.create({
       data,
     });
   }
 
   findAll() {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     return this.prisma.user.findMany({
       select: {
         id: true,
         name: true,
+        email: true,
         role: true,
+        createdAt: true,
+
         racks: {
           select: {
             id: true,
-            name_rack: true,
+            kode_rack: true,
+            divisi: true,
+            status: true,
             createdAt: true,
           },
         },
+      },
+      orderBy: {
+        createdAt: 'desc',
       },
     });
   }
 
   findById(id: string) {
     return this.prisma.user.findUnique({
-      where: { id },
+      where: {
+        id,
+      },
+
       select: {
         id: true,
         name: true,
+        email: true,
         role: true,
+        createdAt: true,
+
         racks: {
           select: {
-            name_rack: true,
+            id: true,
+            kode_rack: true,
+            divisi: true,
+            status: true,
+            createdAt: true,
+          },
+        },
+
+        documents: {
+          select: {
+            id: true,
+            title: true,
+            status: true,
+            createdAt: true,
+          },
+          orderBy: {
+            createdAt: 'desc',
           },
         },
       },
@@ -50,18 +79,28 @@ export class UsersService {
 
   findByEmail(email: string) {
     return this.prisma.user.findUnique({
-      where: { email },
+      where: {
+        email,
+      },
     });
   }
 
   findByRole(role: Role) {
     return this.prisma.user.findMany({
-      where: { role },
+      where: {
+        role,
+      },
+
       select: {
         id: true,
         name: true,
         email: true,
         role: true,
+        createdAt: true,
+      },
+
+      orderBy: {
+        createdAt: 'desc',
       },
     });
   }

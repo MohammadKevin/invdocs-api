@@ -20,9 +20,6 @@ export class RegisterAdminDto {
   @MinLength(6)
   password!: string;
 
-  @IsNotEmpty()
-  name_rack!: string;
-
   @IsEnum(Divisi)
   divisi!: Divisi;
 }

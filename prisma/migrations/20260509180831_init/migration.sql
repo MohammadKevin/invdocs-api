@@ -16,13 +16,14 @@ CREATE TABLE `User` (
 -- CreateTable
 CREATE TABLE `Rack` (
     `id` VARCHAR(191) NOT NULL,
-    `name_rack` VARCHAR(191) NOT NULL,
     `status` ENUM('pending', 'active', 'inactive') NOT NULL DEFAULT 'pending',
+    `kode_rack` VARCHAR(191) NOT NULL,
     `divisi` ENUM('HR', 'Finance', 'IT', 'Marketing', 'Sales', 'Operations', 'Legal', 'RnD', 'Admin') NOT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
     `userId` VARCHAR(191) NOT NULL,
 
+    UNIQUE INDEX `Rack_kode_rack_key`(`kode_rack`),
     INDEX `Rack_userId_idx`(`userId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -31,7 +32,6 @@ CREATE TABLE `Rack` (
 CREATE TABLE `Box` (
     `id` VARCHAR(191) NOT NULL,
     `kode_box` VARCHAR(191) NOT NULL,
-    `name_box` VARCHAR(191) NOT NULL,
     `description` VARCHAR(150) NOT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
