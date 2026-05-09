@@ -1,21 +1,12 @@
 import { NestFactory } from '@nestjs/core';
-
 import { AppModule } from './app.module';
-
 import { ValidationPipe } from '@nestjs/common';
-
 import { ConfigService } from '@nestjs/config';
-
 import { NestExpressApplication } from '@nestjs/platform-express';
-
 import helmet from 'helmet';
-
 import morgan from 'morgan';
-
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-
 import { join } from 'path';
-
 import * as fs from 'fs';
 
 async function bootstrap() {
@@ -24,19 +15,13 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
 
   const uploadPath = join(process.cwd(), 'uploads');
-
   if (!fs.existsSync(uploadPath)) {
-    fs.mkdirSync(uploadPath, {
-      recursive: true,
-    });
+    fs.mkdirSync(uploadPath, { recursive: true });
   }
 
   const documentsPath = join(process.cwd(), 'uploads', 'documents');
-
   if (!fs.existsSync(documentsPath)) {
-    fs.mkdirSync(documentsPath, {
-      recursive: true,
-    });
+    fs.mkdirSync(documentsPath, { recursive: true });
   }
 
   app.useStaticAssets(join(process.cwd(), 'uploads'), {
@@ -45,17 +30,16 @@ async function bootstrap() {
   });
 
   app.use(helmet());
-
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   app.use(morgan('dev'));
 
   app.enableCors({
-    origin: ['http://localhost:3000', 'https://your-frontend.vercel.app'],
-
+    origin: [
+      'http://localhost:3000',
+      'https://gudang-baru-berkah.vercel.app', // ← URL Vercel kamu
+    ],
     credentials: true,
-
     methods: ['GET', 'POST', 'PATCH', 'DELETE', 'PUT', 'OPTIONS'],
-
     allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
@@ -66,7 +50,7 @@ async function bootstrap() {
       transform: true,
       transformOptions: {
         enableImplicitConversion: true,
-      },  
+      },
     }),
   );
 
@@ -88,19 +72,14 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, swaggerConfig);
-
   SwaggerModule.setup('docs', app, document);
 
   const port = configService.get<number>('PORT') || 3000;
-
   await app.listen(port);
 
   console.log(`🚀 Server running on port ${port}`);
-
   console.log(`📘 Swagger: http://localhost:${port}/docs`);
-
   console.log(`📂 Upload Path: ${documentsPath}`);
-
   console.log(
     `🌐 File URL Example: http://localhost:${port}/uploads/documents/file.pdf`,
   );
