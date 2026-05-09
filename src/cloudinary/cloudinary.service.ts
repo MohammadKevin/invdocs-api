@@ -12,21 +12,27 @@ export class CloudinaryService {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
           folder: 'documents',
+
           resource_type: 'raw',
+
           use_filename: true,
+
           unique_filename: true,
+
           ...(ext && { format: ext }),
         },
+
         (error, result) => {
           // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
-          if (error) return reject(error);
+          if (error) {
+            // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
+            return reject(error);
+          }
 
-          const url = result!.secure_url.replace(
-            '/raw/upload/',
-            '/raw/upload/fl_attachment/',
-          );
+          console.log('CLOUDINARY RESULT:', result);
 
-          resolve(url);
+          // ✅ LANGSUNG PAKAI SECURE_URL
+          resolve(result!.secure_url);
         },
       );
 
