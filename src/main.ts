@@ -50,8 +50,13 @@ async function bootstrap() {
   app.use(morgan('dev'));
 
   app.enableCors({
-    origin: true,
+    origin: ['http://localhost:3000', 'https://your-frontend.vercel.app'],
+
     credentials: true,
+
+    methods: ['GET', 'POST', 'PATCH', 'DELETE', 'PUT', 'OPTIONS'],
+
+    allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
   app.useGlobalPipes(
