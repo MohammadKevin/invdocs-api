@@ -13,7 +13,7 @@ export class CloudinaryService {
         {
           folder: 'documents',
 
-          resource_type: 'raw',
+          resource_type: 'auto',
 
           use_filename: true,
 
