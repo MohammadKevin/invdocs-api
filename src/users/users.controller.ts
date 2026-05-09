@@ -15,4 +15,10 @@ export class UsersController {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return this.usersService.findById(id);
   }
+
+  @Get('role/:role')
+  findByRole(@Param('role') role: string) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    return this.usersService.findByRole(role as any);
+  }
 }

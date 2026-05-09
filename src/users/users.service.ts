@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
+import { Role } from '@prisma/client';
 
 @Injectable()
 export class UsersService {
@@ -43,6 +44,24 @@ export class UsersService {
             name_rack: true,
           },
         },
+      },
+    });
+  }
+
+  findByEmail(email: string) {
+    return this.prisma.user.findUnique({
+      where: { email },
+    });
+  }
+
+  findByRole(role: Role) {
+    return this.prisma.user.findMany({
+      where: { role },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
       },
     });
   }
