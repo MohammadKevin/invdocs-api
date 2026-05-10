@@ -1,14 +1,20 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+
 import { PrismaService } from 'src/prisma/prisma.service';
+
 import { StatusRack, Divisi } from '@prisma/client';
+
 import { UpdateRackDto } from './dto/update-rack.dto';
 
 @Injectable()
 export class RackService {
   constructor(private prisma: PrismaService) {}
 
-  private async generateRackCode() {
+  private async generateRackCode(divisi: Divisi) {
     const racks = await this.prisma.rack.findMany({
+      where: {
+        divisi,
+      },
       select: {
         kode_rack: true,
       },
@@ -19,10 +25,8 @@ export class RackService {
 
     const usedNumbers = racks
       .map((rack) => {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
         const match = rack.kode_rack.match(/\d+/);
 
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
         return match ? parseInt(match[0], 10) : null;
       })
       .filter((n): n is number => n !== null)
@@ -42,7 +46,7 @@ export class RackService {
   }
 
   async createRack(userId: string, divisi: Divisi) {
-    const kode_rack = await this.generateRackCode();
+    const kode_rack = await this.generateRackCode(divisi);
 
     return this.prisma.rack.create({
       data: {
@@ -96,9 +100,15 @@ export class RackService {
 
   async findMyRacks(userId: string) {
     return this.prisma.rack.findMany({
-      where: { userId },
-      include: { boxes: true },
-      orderBy: { createdAt: 'desc' },
+      where: {
+        userId,
+      },
+      include: {
+        boxes: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
     });
   }
 
@@ -141,7 +151,10 @@ export class RackService {
 
   async updateRack(id: string, userId: string, dto: UpdateRackDto) {
     const rack = await this.prisma.rack.findFirst({
-      where: { id, userId },
+      where: {
+        id,
+        userId,
+      },
     });
 
     if (!rack) {
@@ -149,9 +162,9 @@ export class RackService {
     }
 
     return this.prisma.rack.update({
-      where: { id },
-
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      where: {
+        id,
+      },
       data: dto,
     });
   }
@@ -165,7 +178,9 @@ export class RackService {
           },
         })
       : await this.prisma.rack.findUnique({
-          where: { id },
+          where: {
+            id,
+          },
         });
 
     if (!rack) {
@@ -173,13 +188,17 @@ export class RackService {
     }
 
     return this.prisma.rack.delete({
-      where: { id },
+      where: {
+        id,
+      },
     });
   }
 
   async approveRack(id: string) {
     const rack = await this.prisma.rack.findUnique({
-      where: { id },
+      where: {
+        id,
+      },
     });
 
     if (!rack) {
@@ -187,7 +206,9 @@ export class RackService {
     }
 
     return this.prisma.rack.update({
-      where: { id },
+      where: {
+        id,
+      },
       data: {
         status: StatusRack.active,
       },
@@ -196,7 +217,9 @@ export class RackService {
 
   async rejectRack(id: string) {
     const rack = await this.prisma.rack.findUnique({
-      where: { id },
+      where: {
+        id,
+      },
     });
 
     if (!rack) {
@@ -204,7 +227,9 @@ export class RackService {
     }
 
     return this.prisma.rack.update({
-      where: { id },
+      where: {
+        id,
+      },
       data: {
         status: StatusRack.inactive,
       },

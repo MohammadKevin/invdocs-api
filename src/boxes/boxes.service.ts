@@ -6,9 +6,11 @@ import {
 } from '@nestjs/common';
 
 import { PrismaService } from 'src/prisma/prisma.service';
+
 import { Box, Role, StatusRack } from '@prisma/client';
 
 import { CreateBoxDto } from './dto/create-boxes.dto';
+
 import { UpdateBoxDto } from './dto/update-service.dto';
 
 interface JwtUser {
@@ -21,8 +23,11 @@ interface JwtUser {
 export class BoxesService {
   constructor(private readonly prisma: PrismaService) {}
 
-  private async generateBoxCode() {
+  private async generateBoxCode(rackId: string) {
     const boxes = await this.prisma.box.findMany({
+      where: {
+        rackId,
+      },
       select: {
         kode_box: true,
       },
@@ -34,6 +39,7 @@ export class BoxesService {
     const usedNumbers = boxes
       .map((box) => {
         const match = box.kode_box.match(/\d+/);
+
         return match ? parseInt(match[0], 10) : null;
       })
       .filter((n): n is number => n !== null)
@@ -54,7 +60,9 @@ export class BoxesService {
 
   async create(dto: CreateBoxDto, user: JwtUser): Promise<Box> {
     const rack = await this.prisma.rack.findUnique({
-      where: { id: dto.rackId },
+      where: {
+        id: dto.rackId,
+      },
     });
 
     if (!rack) {
@@ -75,7 +83,7 @@ export class BoxesService {
       throw new BadRequestException('Rack belum aktif');
     }
 
-    const kode_box = await this.generateBoxCode();
+    const kode_box = await this.generateBoxCode(dto.rackId);
 
     return this.prisma.box.create({
       data: {
@@ -100,7 +108,9 @@ export class BoxesService {
 
   async findByRack(rackId: string, user: JwtUser) {
     const rack = await this.prisma.rack.findUnique({
-      where: { id: rackId },
+      where: {
+        id: rackId,
+      },
     });
 
     if (!rack) {
@@ -112,7 +122,9 @@ export class BoxesService {
     }
 
     return this.prisma.box.findMany({
-      where: { rackId },
+      where: {
+        rackId,
+      },
       orderBy: {
         createdAt: 'desc',
       },
@@ -121,7 +133,9 @@ export class BoxesService {
 
   async findOne(id: string, user: JwtUser): Promise<Box> {
     const box = await this.prisma.box.findUnique({
-      where: { id },
+      where: {
+        id,
+      },
       include: {
         rack: true,
       },
@@ -140,7 +154,9 @@ export class BoxesService {
 
   async update(id: string, dto: UpdateBoxDto, user: JwtUser): Promise<Box> {
     const box = await this.prisma.box.findUnique({
-      where: { id },
+      where: {
+        id,
+      },
       include: {
         rack: true,
       },
@@ -155,7 +171,9 @@ export class BoxesService {
     }
 
     return this.prisma.box.update({
-      where: { id },
+      where: {
+        id,
+      },
       data: {
         ...(dto.description && {
           description: dto.description,
@@ -166,7 +184,9 @@ export class BoxesService {
 
   async remove(id: string, user: JwtUser): Promise<Box> {
     const box = await this.prisma.box.findUnique({
-      where: { id },
+      where: {
+        id,
+      },
       include: {
         rack: true,
       },
@@ -181,7 +201,9 @@ export class BoxesService {
     }
 
     return this.prisma.box.delete({
-      where: { id },
+      where: {
+        id,
+      },
     });
   }
 }
