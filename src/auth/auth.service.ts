@@ -6,7 +6,7 @@ import {
 import { PrismaService } from 'src/prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { User, Role, StatusRack } from '@prisma/client';
+import { User, Role, StatusRack, Divisi } from '@prisma/client';
 import { RegisterUserDto } from './dto/register-user.dto';
 import { RegisterAdminDto } from './dto/register-admin.dto';
 import { LoginDto } from './dto/login.dto';
@@ -18,38 +18,28 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  private async generateRackCode() {
+  // ✅ Fix: filter per divisi supaya tiap divisi mulai dari RACK-001 sendiri
+  private async generateRackCode(divisi: Divisi): Promise<string> {
     const racks = await this.prisma.rack.findMany({
-      select: {
-        kode_rack: true,
-      },
-      orderBy: {
-        kode_rack: 'asc',
-      },
+      where: { divisi },
+      select: { kode_rack: true },
     });
 
-    const usedNumbers = racks
-      .map((rack) => {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-        const match = rack.kode_rack.match(/\d+/);
+    const usedNumbers = new Set<number>();
 
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
-        return match ? parseInt(match[0], 10) : null;
-      })
-      .filter((n): n is number => n !== null)
-      .sort((a, b) => a - b);
-
-    let nextNumber = 1;
-
-    for (const num of usedNumbers) {
-      if (num === nextNumber) {
-        nextNumber++;
-      } else {
-        break;
+    for (const rack of racks) {
+      const match = rack.kode_rack.match(/(\d+)$/);
+      if (match) {
+        usedNumbers.add(parseInt(match[0], 10));
       }
     }
 
-    return `RACK-${nextNumber.toString().padStart(3, '0')}`;
+    let nextNumber = 1;
+    while (usedNumbers.has(nextNumber)) {
+      nextNumber++;
+    }
+
+    return `RACK-${String(nextNumber).padStart(3, '0')}`;
   }
 
   async registerUser(dto: RegisterUserDto) {
@@ -72,7 +62,6 @@ export class AuthService {
         email: dto.email,
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         password: hashedPassword,
-
         role: dto.role === 'super admin' ? Role.admin_rack : Role.user,
       },
     });
@@ -94,7 +83,8 @@ export class AuthService {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     const hashedPassword = await bcrypt.hash(dto.password, 10);
 
-    const kode_rack = await this.generateRackCode();
+    // ✅ Fix: pass dto.divisi ke generateRackCode
+    const kode_rack = await this.generateRackCode(dto.divisi);
 
     await this.prisma.user.create({
       data: {
@@ -102,9 +92,7 @@ export class AuthService {
         email: dto.email,
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         password: hashedPassword,
-
         role: Role.admin_rack,
-
         racks: {
           create: {
             kode_rack,
@@ -125,7 +113,6 @@ export class AuthService {
       where: {
         email: email.trim(),
       },
-
       include: {
         racks: true,
       },
@@ -159,20 +146,17 @@ export class AuthService {
 
   async login(dto: LoginDto) {
     const user = await this.validateUser(dto.email, dto.password);
-
     return this.generateToken(user);
   }
 
   private generateToken(user: User) {
     return {
       message: 'Berhasil',
-
       access_token: this.jwtService.sign({
         sub: user.id,
         email: user.email,
         role: user.role,
       }),
-
       user: {
         id: user.id,
         name: user.name,

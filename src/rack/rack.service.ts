@@ -11,20 +11,25 @@ export class RackService {
   constructor(private prisma: PrismaService) {}
 
   private async generateRackCode(divisi: Divisi): Promise<string> {
+    console.log('Generating for divisi:', divisi); // ← cek value masuk
+
     const racks = await this.prisma.rack.findMany({
       where: { divisi },
       select: { kode_rack: true },
     });
 
+    console.log('Existing racks for this divisi:', racks); // ← harusnya kosong untuk Finance
+
     const usedNumbers = new Set<number>();
 
     for (const rack of racks) {
-      // Ambil angka di bagian paling akhir: 'RACK-001' → 1
       const match = rack.kode_rack.match(/(\d+)$/);
       if (match) {
         usedNumbers.add(parseInt(match[1], 10));
       }
     }
+
+    console.log('Used numbers:', [...usedNumbers]); // ← kalau Finance harusnya []
 
     let nextNumber = 1;
     while (usedNumbers.has(nextNumber)) {
