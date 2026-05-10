@@ -55,18 +55,38 @@ export class DocumentsService {
   async findAll() {
     return this.prisma.document.findMany({
       include: {
-        box: true,
         user: true,
+
+        box: {
+          include: {
+            rack: true,
+          },
+        },
       },
-      orderBy: { createdAt: 'desc' },
+
+      orderBy: {
+        createdAt: 'desc',
+      },
     });
   }
 
   async findMyDocuments(user: JwtUser) {
     return this.prisma.document.findMany({
-      where: { uploadedBy: user.id },
-      include: { box: true },
-      orderBy: { createdAt: 'desc' },
+      where: {
+        uploadedBy: user.id,
+      },
+
+      include: {
+        box: {
+          include: {
+            rack: true,
+          },
+        },
+      },
+
+      orderBy: {
+        createdAt: 'desc',
+      },
     });
   }
 
