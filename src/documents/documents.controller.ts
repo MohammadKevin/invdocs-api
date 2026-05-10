@@ -55,9 +55,6 @@ export class DocumentsController {
     private readonly cloudinaryService: CloudinaryService,
   ) {}
 
-  // =========================
-  // UPLOAD (USER ONLY)
-  // =========================
   @Post('upload')
   @Roles(Role.user)
   @UseGuards(RolesGuard)
@@ -80,6 +77,7 @@ export class DocumentsController {
     @Body() dto: CreateDocumentDto,
     @Req() req: any,
   ) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     const user: JwtUser = req.user;
 
     const fileUrl = await this.cloudinaryService.uploadFile(file);
@@ -87,9 +85,6 @@ export class DocumentsController {
     return this.documentsService.create(fileUrl, file, dto, user);
   }
 
-  // =========================
-  // GET ALL DOCUMENTS
-  // =========================
   @Get()
   @Roles(Role.super_admin, Role.admin_rack, Role.user)
   @UseGuards(RolesGuard)
@@ -97,20 +92,15 @@ export class DocumentsController {
     return this.documentsService.findAll();
   }
 
-  // =========================
-  // MY DOCUMENTS
-  // =========================
   @Get('my')
   @Roles(Role.user)
   @UseGuards(RolesGuard)
   getMy(@Req() req: any) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     const user: JwtUser = req.user;
     return this.documentsService.findMyDocuments(user);
   }
 
-  // =========================
-  // DETAIL
-  // =========================
   @Get(':id')
   @Roles(Role.super_admin, Role.admin_rack, Role.user)
   @UseGuards(RolesGuard)
@@ -119,9 +109,6 @@ export class DocumentsController {
     return this.documentsService.findOne(id);
   }
 
-  // =========================
-  // UPDATE (USER ONLY)
-  // =========================
   @Patch(':id')
   @Roles(Role.user)
   @UseGuards(RolesGuard)
@@ -130,48 +117,40 @@ export class DocumentsController {
     @Body() dto: UpdateDocumentDto,
     @Req() req: any,
   ) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     const user: JwtUser = req.user;
     return this.documentsService.update(id, dto, user);
   }
 
-  // =========================
-  // DELETE (USER ONLY)
-  // =========================
   @Delete(':id')
   @Roles(Role.user)
   @UseGuards(RolesGuard)
   remove(@Param('id') id: string, @Req() req: any) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     const user: JwtUser = req.user;
     return this.documentsService.remove(id, user);
   }
 
-  // =========================
-  // APPROVE (ADMIN ONLY)
-  // =========================
   @Patch(':id/approve')
   @Roles(Role.admin_rack, Role.super_admin)
   @UseGuards(RolesGuard)
   @ApiParam({ name: 'id' })
   approve(@Param('id') id: string, @Req() req: any) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     const user: JwtUser = req.user;
     return this.documentsService.approve(id, user);
   }
 
-  // =========================
-  // REJECT (ADMIN ONLY)
-  // =========================
   @Patch(':id/reject')
   @Roles(Role.admin_rack, Role.super_admin)
   @UseGuards(RolesGuard)
   @ApiParam({ name: 'id' })
   reject(@Param('id') id: string, @Req() req: any) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     const user: JwtUser = req.user;
     return this.documentsService.reject(id, user);
   }
 
-  // =========================
-  // DOWNLOAD (PUBLIC)
-  // =========================
   @Get(':id/download')
   @Public()
   async download(@Param('id') id: string, @Res() res: Response) {

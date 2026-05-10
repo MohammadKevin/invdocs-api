@@ -20,9 +20,6 @@ interface JwtUser {
 export class DocumentsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  // =========================
-  // CREATE DOCUMENT
-  // =========================
   async create(
     fileUrl: string,
     file: Express.Multer.File,
@@ -55,9 +52,6 @@ export class DocumentsService {
     });
   }
 
-  // =========================
-  // GET ALL
-  // =========================
   async findAll() {
     return this.prisma.document.findMany({
       include: {
@@ -68,9 +62,6 @@ export class DocumentsService {
     });
   }
 
-  // =========================
-  // MY DOCUMENTS
-  // =========================
   async findMyDocuments(user: JwtUser) {
     return this.prisma.document.findMany({
       where: { uploadedBy: user.id },
@@ -79,9 +70,6 @@ export class DocumentsService {
     });
   }
 
-  // =========================
-  // FIND ONE
-  // =========================
   async findOne(id: string): Promise<Document> {
     const doc = await this.prisma.document.findUnique({
       where: { id },
@@ -99,9 +87,6 @@ export class DocumentsService {
     return doc;
   }
 
-  // =========================
-  // UPDATE
-  // =========================
   async update(id: string, dto: UpdateDocumentDto, user: JwtUser) {
     const doc = await this.prisma.document.findUnique({ where: { id } });
 
@@ -126,9 +111,6 @@ export class DocumentsService {
     });
   }
 
-  // =========================
-  // DELETE
-  // =========================
   async remove(id: string, user: JwtUser) {
     const doc = await this.prisma.document.findUnique({ where: { id } });
 
@@ -143,9 +125,6 @@ export class DocumentsService {
     return this.prisma.document.delete({ where: { id } });
   }
 
-  // =========================
-  // APPROVE
-  // =========================
   async approve(id: string, user: JwtUser) {
     this.ensureAdmin(user);
 
@@ -164,9 +143,6 @@ export class DocumentsService {
     });
   }
 
-  // =========================
-  // REJECT
-  // =========================
   async reject(id: string, user: JwtUser) {
     this.ensureAdmin(user);
 
@@ -185,9 +161,6 @@ export class DocumentsService {
     });
   }
 
-  // =========================
-  // FIX ROLE CHECK (IMPORTANT)
-  // =========================
   private ensureAdmin(user: JwtUser) {
     const allowed: Role[] = [Role.admin_rack, Role.super_admin];
 
