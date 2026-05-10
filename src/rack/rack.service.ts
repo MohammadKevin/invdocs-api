@@ -20,21 +20,23 @@ export class RackService {
       },
     });
 
-    const numbers = racks
-      .map((rack) => {
-        const parts = rack.kode_rack.split('-');
+    const usedNumbers = new Set<number>();
 
-        return Number(parts[1]);
-      })
-      .filter((n) => !isNaN(n));
+    for (const rack of racks) {
+      const num = parseInt(rack.kode_rack.replace('RACK-', ''), 10);
+
+      if (!isNaN(num)) {
+        usedNumbers.add(num);
+      }
+    }
 
     let nextNumber = 1;
 
-    while (numbers.includes(nextNumber)) {
+    while (usedNumbers.has(nextNumber)) {
       nextNumber++;
     }
 
-    return `RACK-${String(nextNumber).padStart(3, '0')}`;
+    return `RACK-GBB-${String(nextNumber).padStart(3, '0')}`;
   }
 
   async createRack(userId: string, divisi: Divisi) {
