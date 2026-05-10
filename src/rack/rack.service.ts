@@ -10,33 +10,28 @@ import { UpdateRackDto } from './dto/update-rack.dto';
 export class RackService {
   constructor(private prisma: PrismaService) {}
 
-  private async generateRackCode(divisi: Divisi) {
+  private async generateRackCode(divisi: Divisi): Promise<string> {
     const racks = await this.prisma.rack.findMany({
-      where: {
-        divisi,
-      },
-      select: {
-        kode_rack: true,
-      },
+      where: { divisi },
+      select: { kode_rack: true },
     });
 
     const usedNumbers = new Set<number>();
 
     for (const rack of racks) {
-      const num = parseInt(rack.kode_rack.replace('RACK-', ''), 10);
-
-      if (!isNaN(num)) {
-        usedNumbers.add(num);
+      // Ambil angka di bagian paling akhir: 'RACK-001' → 1
+      const match = rack.kode_rack.match(/(\d+)$/);
+      if (match) {
+        usedNumbers.add(parseInt(match[1], 10));
       }
     }
 
     let nextNumber = 1;
-
     while (usedNumbers.has(nextNumber)) {
       nextNumber++;
     }
 
-    return `RACK-GBB-${String(nextNumber).padStart(3, '0')}`;
+    return `RACK-${String(nextNumber).padStart(3, '0')}`;
   }
 
   async createRack(userId: string, divisi: Divisi) {
