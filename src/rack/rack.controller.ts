@@ -71,9 +71,10 @@ export class RackController {
   }
 
   @Delete(':id')
-  delete(@Param('id') id: string, @Req() req: any) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
-    return this.rackService.deleteRack(id, req.user.id);
+  @UseGuards(RolesGuard)
+  @Roles(Role.super_admin)
+  delete(@Param('id') id: string) {
+    return this.rackService.deleteRack(id);
   }
 
   @Patch(':id/approve')
