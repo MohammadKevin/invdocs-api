@@ -18,31 +18,23 @@ export class RackService {
       select: {
         kode_rack: true,
       },
-      orderBy: {
-        kode_rack: 'asc',
-      },
     });
 
-    const usedNumbers = racks
+    const numbers = racks
       .map((rack) => {
-        const match = rack.kode_rack.match(/\d+/);
+        const parts = rack.kode_rack.split('-');
 
-        return match ? parseInt(match[0], 10) : null;
+        return Number(parts[1]);
       })
-      .filter((n): n is number => n !== null)
-      .sort((a, b) => a - b);
+      .filter((n) => !isNaN(n));
 
     let nextNumber = 1;
 
-    for (const num of usedNumbers) {
-      if (num === nextNumber) {
-        nextNumber++;
-      } else {
-        break;
-      }
+    while (numbers.includes(nextNumber)) {
+      nextNumber++;
     }
 
-    return `RACK-${nextNumber.toString().padStart(3, '0')}`;
+    return `RACK-${String(nextNumber).padStart(3, '0')}`;
   }
 
   async createRack(userId: string, divisi: Divisi) {

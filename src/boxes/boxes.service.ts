@@ -31,31 +31,23 @@ export class BoxesService {
       select: {
         kode_box: true,
       },
-      orderBy: {
-        kode_box: 'asc',
-      },
     });
 
-    const usedNumbers = boxes
+    const numbers = boxes
       .map((box) => {
-        const match = box.kode_box.match(/\d+/);
+        const parts = box.kode_box.split('-');
 
-        return match ? parseInt(match[0], 10) : null;
+        return Number(parts[1]);
       })
-      .filter((n): n is number => n !== null)
-      .sort((a, b) => a - b);
+      .filter((n) => !isNaN(n));
 
     let nextNumber = 1;
 
-    for (const num of usedNumbers) {
-      if (num === nextNumber) {
-        nextNumber++;
-      } else {
-        break;
-      }
+    while (numbers.includes(nextNumber)) {
+      nextNumber++;
     }
 
-    return `BOX-${nextNumber.toString().padStart(3, '0')}`;
+    return `BOX-${String(nextNumber).padStart(3, '0')}`;
   }
 
   async create(dto: CreateBoxDto, user: JwtUser): Promise<Box> {
