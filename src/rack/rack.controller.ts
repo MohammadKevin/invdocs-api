@@ -29,6 +29,14 @@ export class RackController {
     return this.rackService.findPending();
   }
 
+  @Get('admin/all')
+  @UseGuards(RolesGuard)
+  @Roles(Role.super_admin)
+  findAllAdminRacks() {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
+    return this.rackService.findAllAdminRacks();
+  }
+
   @Get()
   findAll() {
     return this.rackService.findAllRacks();

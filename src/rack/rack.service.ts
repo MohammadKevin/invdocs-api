@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { StatusRack, Divisi } from '@prisma/client';
 import { UpdateRackDto } from './dto/update-rack.dto';
+
 @Injectable()
 export class RackService {
   constructor(private prisma: PrismaService) {}
@@ -20,6 +21,7 @@ export class RackService {
       .map((rack) => {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
         const match = rack.kode_rack.match(/\d+/);
+
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
         return match ? parseInt(match[0], 10) : null;
       })
@@ -55,6 +57,24 @@ export class RackService {
     return this.prisma.rack.findMany({
       where: {
         status: StatusRack.pending,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+  }
+
+  async findAllAdminRacks() {
+    return this.prisma.rack.findMany({
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        boxes: true,
       },
       orderBy: {
         createdAt: 'desc',
@@ -130,15 +150,23 @@ export class RackService {
 
     return this.prisma.rack.update({
       where: { id },
+
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       data: dto,
     });
   }
 
-  async deleteRack(id: string, userId: string) {
-    const rack = await this.prisma.rack.findFirst({
-      where: { id, userId },
-    });
+  async deleteRack(id: string, userId?: string) {
+    const rack = userId
+      ? await this.prisma.rack.findFirst({
+          where: {
+            id,
+            userId,
+          },
+        })
+      : await this.prisma.rack.findUnique({
+          where: { id },
+        });
 
     if (!rack) {
       throw new NotFoundException('Rack tidak ditemukan');
