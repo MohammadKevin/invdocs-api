@@ -37,7 +37,6 @@ CREATE TABLE `Box` (
     `updatedAt` DATETIME(3) NOT NULL,
     `rackId` VARCHAR(191) NOT NULL,
 
-    UNIQUE INDEX `Box_kode_box_key`(`kode_box`),
     INDEX `Box_rackId_idx`(`rackId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

@@ -79,7 +79,7 @@ model Rack {
 
 model Box {
   id          String   @id @default(uuid())
-  kode_box    String   @unique
+  kode_box    String
   description String   @db.VarChar(150)
 
   createdAt DateTime @default(now())
