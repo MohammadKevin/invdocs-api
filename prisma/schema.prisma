@@ -63,7 +63,7 @@ model User {
 model Rack {
   id        String     @id @default(uuid())
   status    StatusRack @default(pending)
-  kode_rack String     @unique
+  kode_rack String
   divisi    Divisi
 
   createdAt DateTime @default(now())
@@ -75,6 +75,7 @@ model Rack {
   boxes Box[]
 
   @@index([userId])
+  @@unique([divisi, kode_rack])
 }
 
 model Box {
@@ -91,6 +92,7 @@ model Box {
   documents Document[]
 
   @@index([rackId])
+  @@unique([rackId, kode_box])
 }
 
 model Counter {

@@ -23,8 +23,8 @@ CREATE TABLE `Rack` (
     `updatedAt` DATETIME(3) NOT NULL,
     `userId` VARCHAR(191) NOT NULL,
 
-    UNIQUE INDEX `Rack_kode_rack_key`(`kode_rack`),
     INDEX `Rack_userId_idx`(`userId`),
+    UNIQUE INDEX `Rack_divisi_kode_rack_key`(`divisi`, `kode_rack`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -38,6 +38,7 @@ CREATE TABLE `Box` (
     `rackId` VARCHAR(191) NOT NULL,
 
     INDEX `Box_rackId_idx`(`rackId`),
+    UNIQUE INDEX `Box_rackId_kode_box_key`(`rackId`, `kode_box`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
