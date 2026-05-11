@@ -9,23 +9,14 @@ import {
   UseGuards,
   Req,
 } from '@nestjs/common';
-
 import { BoxesService } from './boxes.service';
-
 import { CreateBoxDto } from './dto/create-boxes.dto';
-
 import { UpdateBoxDto } from './dto/update-service.dto';
-
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-
 import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
-
 import { RolesGuard } from 'src/auth/guard/roles.guard';
-
 import { Roles } from 'src/auth/Decorators/roles.decorator';
-
 import { Role } from '@prisma/client';
-
 interface JwtUser {
   id: string;
   email: string;

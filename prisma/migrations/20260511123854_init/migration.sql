@@ -31,6 +31,7 @@ CREATE TABLE `Rack` (
 -- CreateTable
 CREATE TABLE `Box` (
     `id` VARCHAR(191) NOT NULL,
+    `name_box` VARCHAR(191) NOT NULL,
     `kode_box` VARCHAR(191) NOT NULL,
     `description` VARCHAR(150) NOT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),

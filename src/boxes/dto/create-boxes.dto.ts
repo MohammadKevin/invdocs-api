@@ -8,4 +8,7 @@ export class CreateBoxDto {
 
   @IsUUID()
   rackId!: string;
+
+  @IsString()
+  name_box!: string;
 }

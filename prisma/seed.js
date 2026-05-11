@@ -6,8 +6,14 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Seeding...');
 
-  const email = 'admin@mail.com';
-  const hashedPassword = await bcrypt.hash('admin123', 10);
+  const email = process.env.SUPER_ADMIN_EMAIL;
+  const password = process.env.SUPER_ADMIN_PASSWORD;
+
+  if (!email || !password) {
+    throw new Error('SUPER_ADMIN_EMAIL / PASSWORD belum ada di .env');
+  }
+
+  const hashedPassword = await bcrypt.hash(password, 10);
 
   await prisma.user.upsert({
     where: { email },
@@ -28,4 +34,6 @@ main()
     console.error('❌ Seed error:', e);
     process.exit(1);
   })
-  .finally(() => prisma.$disconnect());
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

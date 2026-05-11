@@ -4,13 +4,9 @@ import {
   ForbiddenException,
   BadRequestException,
 } from '@nestjs/common';
-
 import { PrismaService } from 'src/prisma/prisma.service';
-
 import { Box, Role, StatusRack } from '@prisma/client';
-
 import { CreateBoxDto } from './dto/create-boxes.dto';
-
 import { UpdateBoxDto } from './dto/update-service.dto';
 
 interface JwtUser {
@@ -80,6 +76,7 @@ export class BoxesService {
     return this.prisma.box.create({
       data: {
         kode_box,
+        name_box: dto.name_box,
         description: dto.description,
         rackId: dto.rackId,
       },
@@ -167,6 +164,10 @@ export class BoxesService {
         id,
       },
       data: {
+        ...(dto.name_box && {
+          name_box: dto.name_box,
+        }),
+
         ...(dto.description && {
           description: dto.description,
         }),

@@ -80,6 +80,7 @@ model Rack {
 
 model Box {
   id          String   @id @default(uuid())
+  name_box     String
   kode_box    String
   description String   @db.VarChar(150)
 
