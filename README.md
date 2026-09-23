@@ -18,9 +18,9 @@ A secure NestJS REST API designed to process invoice calculations, manage recurr
 ---
 
 ## ✨ Key Features
-- ⚡ **RESTful endpoints for creating, updating, and voiding invoices**: RESTful endpoints for creating, updating, and voiding invoices
-- ⚡ **Automated total, tax, and discount computation logic**: Automated total, tax, and discount computation logic
-- ⚡ **Prisma ORM integration with structured relationships**: Prisma ORM integration with structured relationships
+- RESTful endpoints for creating, updating, and voiding invoices
+- Automated total, tax, and discount computation logic
+- Prisma ORM integration with structured relationships
 
 ---
 
